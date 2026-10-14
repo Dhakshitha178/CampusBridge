@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.campusbridge.placement.PlacementBackendApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.91 s -- in com.campusbridge.placement.PlacementBackendApplicationTests

@@ -1,0 +1,287 @@
+:root {
+  --primary-color: #0f4c81;       /* Deep Academic Navy */
+  --secondary-color: #00a896;     /* Naan Mudhalvan Teal */
+  --accent-color: #f4a261;        /* Warning / Highlight */
+  --danger-color: #e63946;        /* Conflict / Ineligible */
+  --success-color: #2a9d8f;       /* Eligible / Placed */
+  --sidebar-width: 250px;
+  --bg-light: #f8fafc;
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header / Navbar */
+.top-navbar {
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 1030;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-badge {
+  font-size: 0.7rem;
+  background-color: #00a896;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Layout with Sidebar */
+.portal-layout {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 60px);
+}
+
+.portal-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid var(--border-color);
+  padding: 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar-heading {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 0.85rem;
+  color: #334155;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background-color: #f1f5f9;
+  color: var(--primary-color);
+}
+
+.sidebar-link.active {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+  border-left: 3px solid #0284c7;
+}
+
+.portal-main-content {
+  flex: 1;
+  padding: 1.75rem 2rem;
+  background-color: var(--bg-light);
+  overflow-y: auto;
+}
+
+/* Metric / Stat Cards */
+.stat-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.09);
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: var(--primary-color);
+}
+
+.stat-card.card-accent-teal::before { background-color: var(--secondary-color); }
+.stat-card.card-accent-warning::before { background-color: var(--accent-color); }
+.stat-card.card-accent-danger::before { background-color: var(--danger-color); }
+.stat-card.card-accent-purple::before { background-color: #8b5cf6; }
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Conflict Alert Banner */
+.conflict-alert-box {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #f87171;
+  border-left: 6px solid #dc2626;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.1);
+}
+
+.conflict-alert-box h5 {
+  color: #991b1b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Content Cards */
+.content-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.content-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-card-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.content-card-body {
+  padding: 1.25rem;
+}
+
+/* Eligibility Badges & Match Bars */
+.eligibility-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.eligibility-eligible {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.eligibility-ineligible {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Stages Timeline */
+.stages-stepper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 1rem 0;
+}
+
+.stage-step-chip {
+  padding: 6px 12px;
+  border-radius: 16px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stage-step-chip.active {
+  background-color: #0284c7;
+  color: white;
+  border-color: #0284c7;
+}
+
+.stage-step-chip.passed {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+/* Footer */
+.portal-footer {
+  background-color: #0f172a;
+  color: #94a3b8;
+  padding: 1rem;
+  font-size: 0.82rem;
+  text-align: center;
+  border-top: 1px solid #1e293b;
+}
+
+.portal-footer a {
+  color: #38bdf8;
+  text-decoration: none;
+}

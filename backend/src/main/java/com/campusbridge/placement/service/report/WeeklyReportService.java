@@ -3,10 +3,25 @@ package com.campusbridge.placement.service.report;
 import com.campusbridge.placement.entity.*;
 import com.campusbridge.placement.entity.enums.InterviewStatus;
 import com.campusbridge.placement.repository.*;
-import com.lowagie.text.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.pdf.*;
-import org.apache.poi.ss.usermodel.*;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,6 +44,7 @@ public class WeeklyReportService {
     private final ApplicationRepository applicationRepository;
     private final InterviewRepository interviewRepository;
     private final OfferRepository offerRepository;
+    private final StudentRepository studentRepository;
 
     public WeeklyReportService(
             WeeklyPlacementReportRepository reportRepository,
@@ -36,13 +52,15 @@ public class WeeklyReportService {
             PlacementDriveRepository driveRepository,
             ApplicationRepository applicationRepository,
             InterviewRepository interviewRepository,
-            OfferRepository offerRepository) {
+            OfferRepository offerRepository,
+            StudentRepository studentRepository) {
         this.reportRepository = reportRepository;
         this.collegeRepository = collegeRepository;
         this.driveRepository = driveRepository;
         this.applicationRepository = applicationRepository;
         this.interviewRepository = interviewRepository;
         this.offerRepository = offerRepository;
+        this.studentRepository = studentRepository;
     }
 
     /**
@@ -199,23 +217,23 @@ public class WeeklyReportService {
     }
 
     /**
-     * Export Excel using Apache POI
+     * Export Excel per report using Apache POI
      */
     public byte[] generateExcelReport(Long reportId) throws IOException {
         WeeklyPlacementReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found: " + reportId));
 
-        try (org.apache.poi.ss.usermodel.Workbook workbook = new XSSFWorkbook()) {
-            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Placement Summary");
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Placement Summary");
 
-            org.apache.poi.ss.usermodel.Row row0 = sheet.createRow(0);
+            Row row0 = sheet.createRow(0);
             row0.createCell(0).setCellValue("CampusBridge Weekly Placement Report");
 
-            org.apache.poi.ss.usermodel.Row row1 = sheet.createRow(1);
+            Row row1 = sheet.createRow(1);
             row1.createCell(0).setCellValue("Reporting Period");
             row1.createCell(1).setCellValue(report.getReportingPeriodStart() + " to " + report.getReportingPeriodEnd());
 
-            org.apache.poi.ss.usermodel.Row row3 = sheet.createRow(3);
+            Row row3 = sheet.createRow(3);
             row3.createCell(0).setCellValue("Metric");
             row3.createCell(1).setCellValue("Value");
 
@@ -242,6 +260,103 @@ public class WeeklyReportService {
 
             sheet.autoSizeColumn(0);
             sheet.autoSizeColumn(1);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    /**
+     * Master placement Excel export: Students, Drives, Offers across all colleges
+     */
+    public byte[] generateMasterPlacementExcel(Long collegeId) throws IOException {
+        List<Student> students = studentRepository.findAll();
+        List<PlacementDrive> drives = driveRepository.findAll();
+        List<Offer> offers = offerRepository.findAll();
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.CORNFLOWER_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            // ---- Sheet 1: Students ----
+            Sheet studentsSheet = workbook.createSheet("Students");
+            String[] sCols = {"ID", "Name", "Email", "College", "Department", "Roll Number",
+                    "Academic Year", "Graduation Year", "CGPA", "Backlogs", "Skills", "Placement Status"};
+            Row sHeader = studentsSheet.createRow(0);
+            for (int j = 0; j < sCols.length; j++) {
+                Cell cell = sHeader.createCell(j);
+                cell.setCellValue(sCols[j]);
+                cell.setCellStyle(headerStyle);
+            }
+            int sRow = 1;
+            for (Student s : students) {
+                if (collegeId != null && s.getCollege() != null && !collegeId.equals(s.getCollege().getId())) continue;
+                Row row = studentsSheet.createRow(sRow++);
+                row.createCell(0).setCellValue(s.getId());
+                row.createCell(1).setCellValue(s.getFullName());
+                row.createCell(2).setCellValue(s.getEmail());
+                row.createCell(3).setCellValue(s.getCollege() != null ? s.getCollege().getName() : "");
+                row.createCell(4).setCellValue(s.getDepartment());
+                row.createCell(5).setCellValue(s.getRollNumber());
+                row.createCell(6).setCellValue(s.getAcademicYear());
+                row.createCell(7).setCellValue(s.getGraduationYear());
+                row.createCell(8).setCellValue(s.getCgpa());
+                row.createCell(9).setCellValue(s.getBacklogs());
+                row.createCell(10).setCellValue(s.getSkills() != null ? s.getSkills() : "");
+                row.createCell(11).setCellValue(s.getPlacementStatus() != null ? s.getPlacementStatus().name() : "UNPLACED");
+            }
+            for (int j = 0; j < sCols.length; j++) studentsSheet.autoSizeColumn(j);
+
+            // ---- Sheet 2: Placement Drives ----
+            Sheet drivesSheet = workbook.createSheet("Placement Drives");
+            String[] dCols = {"ID", "Company", "Job Title", "Package (LPA)", "Location", "Status", "Drive Date", "Vacancies"};
+            Row dHeader = drivesSheet.createRow(0);
+            for (int j = 0; j < dCols.length; j++) {
+                Cell cell = dHeader.createCell(j);
+                cell.setCellValue(dCols[j]);
+                cell.setCellStyle(headerStyle);
+            }
+            int dRow = 1;
+            for (PlacementDrive d : drives) {
+                Row row = drivesSheet.createRow(dRow++);
+                row.createCell(0).setCellValue(d.getId());
+                row.createCell(1).setCellValue(d.getCompany() != null ? d.getCompany().getName() : "");
+                row.createCell(2).setCellValue(d.getJobTitle());
+                row.createCell(3).setCellValue(d.getPackageLpa());
+                row.createCell(4).setCellValue(d.getLocation() != null ? d.getLocation() : "");
+                row.createCell(5).setCellValue(d.getStatus() != null ? d.getStatus().name() : "");
+                row.createCell(6).setCellValue(d.getDriveDate() != null ? d.getDriveDate().toString() : "");
+                row.createCell(7).setCellValue(d.getVacancies());
+            }
+            for (int j = 0; j < dCols.length; j++) drivesSheet.autoSizeColumn(j);
+
+            // ---- Sheet 3: Offers ----
+            Sheet offersSheet = workbook.createSheet("Offers");
+            String[] oCols = {"ID", "Student Name", "Company", "Role", "Package (LPA)", "Location", "Offer Status", "Joining Date"};
+            Row oHeader = offersSheet.createRow(0);
+            for (int j = 0; j < oCols.length; j++) {
+                Cell cell = oHeader.createCell(j);
+                cell.setCellValue(oCols[j]);
+                cell.setCellStyle(headerStyle);
+            }
+            int oRow = 1;
+            for (Offer o : offers) {
+                Row row = offersSheet.createRow(oRow++);
+                row.createCell(0).setCellValue(o.getId());
+                row.createCell(1).setCellValue(o.getStudent() != null ? o.getStudent().getFullName() : "");
+                row.createCell(2).setCellValue(o.getCompany() != null ? o.getCompany().getName() : "");
+                row.createCell(3).setCellValue(o.getJobRole() != null ? o.getJobRole() : "");
+                row.createCell(4).setCellValue(o.getPackageLpa());
+                row.createCell(5).setCellValue(o.getLocation() != null ? o.getLocation() : "");
+                row.createCell(6).setCellValue(o.getOfferStatus() != null ? o.getOfferStatus().name() : "");
+                row.createCell(7).setCellValue(o.getJoiningDate() != null ? o.getJoiningDate().toString() : "");
+            }
+            for (int j = 0; j < oCols.length; j++) offersSheet.autoSizeColumn(j);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);

@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface RecruiterRepository extends JpaRepository<Recruiter, Long> {
     Optional<Recruiter> findByUserId(Long userId);
+    boolean existsByUserId(Long userId);
     Optional<Recruiter> findByUserEmail(String email);
     List<Recruiter> findByCompanyId(Long companyId);
 }

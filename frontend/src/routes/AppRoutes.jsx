@@ -5,6 +5,8 @@ import RoleBasedRoute from "./RoleBasedRoute";
 // Auth Pages
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
+import RecruiterRegisterPage from "../pages/auth/RecruiterRegisterPage";
+import TpoRegisterPage from "../pages/auth/TpoRegisterPage";
 
 // Student Pages
 import StudentDashboard from "../pages/student/StudentDashboard";
@@ -46,6 +48,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register-recruiter" element={<RecruiterRegisterPage />} />
+      <Route path="/register-tpo" element={<TpoRegisterPage />} />
 
       {/* STUDENT PORTAL ROUTES */}
       <Route

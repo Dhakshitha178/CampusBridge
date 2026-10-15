@@ -3,6 +3,7 @@ package com.campusbridge.placement.controller.auth;
 import com.campusbridge.placement.dto.request.LoginRequest;
 import com.campusbridge.placement.dto.request.RecruiterRegisterRequest;
 import com.campusbridge.placement.dto.request.StudentRegisterRequest;
+import com.campusbridge.placement.dto.request.TpoRegisterRequest;
 import com.campusbridge.placement.dto.response.ApiResponse;
 import com.campusbridge.placement.dto.response.AuthResponse;
 import com.campusbridge.placement.dto.response.StudentResponse;
@@ -72,6 +73,17 @@ public class AuthController {
     @GetMapping("/colleges")
     public ResponseEntity<ApiResponse<List<College>>> getColleges() {
         return ResponseEntity.ok(ApiResponse.ok(collegeRepository.findAll()));
+    }
+
+    @PostMapping("/register-tpo")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerTpo(@RequestBody TpoRegisterRequest request) {
+        try {
+            AuthResponse response = authService.registerTpo(request);
+            return ResponseEntity.ok(ApiResponse.ok("TPO registration successful", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/companies")

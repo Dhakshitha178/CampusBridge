@@ -180,4 +180,19 @@ public class TpoController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/reports/export/excel")
+    public ResponseEntity<byte[]> exportMasterPlacementExcel(
+            @RequestParam(required = false) Long collegeId) {
+        try {
+            byte[] excelBytes = reportService.generateMasterPlacementExcel(collegeId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=CampusBridge_Placement_Master_" + java.time.LocalDate.now() + ".xlsx")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(excelBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

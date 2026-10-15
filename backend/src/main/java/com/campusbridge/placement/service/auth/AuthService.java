@@ -3,6 +3,7 @@ package com.campusbridge.placement.service.auth;
 import com.campusbridge.placement.dto.request.LoginRequest;
 import com.campusbridge.placement.dto.request.RecruiterRegisterRequest;
 import com.campusbridge.placement.dto.request.StudentRegisterRequest;
+import com.campusbridge.placement.dto.request.TpoRegisterRequest;
 import com.campusbridge.placement.dto.response.AuthResponse;
 import com.campusbridge.placement.dto.response.StudentResponse;
 import com.campusbridge.placement.entity.*;
@@ -186,6 +187,48 @@ public class AuthService {
                 null,
                 company.getId(),
                 company.getName()
+        );
+    }
+
+    @Transactional
+    public AuthResponse registerTpo(TpoRegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already registered: " + request.getEmail());
+        }
+
+        College college = null;
+        if (request.getCollegeId() != null) {
+            college = collegeRepository.findById(request.getCollegeId()).orElse(null);
+        }
+        if (college == null) {
+            college = collegeRepository.findAll().stream().findFirst().orElse(null);
+        }
+
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.TPO);
+        user.setFullName(request.getFullName());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setCollege(college);
+        User savedUser = userRepository.save(user);
+
+        String token = jwtUtil.generateToken(savedUser, null, null);
+
+        Long cId = savedUser.getCollege() != null ? savedUser.getCollege().getId() : null;
+        String cName = savedUser.getCollege() != null ? savedUser.getCollege().getName() : null;
+
+        return new AuthResponse(
+                token,
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getFullName(),
+                Role.TPO,
+                null,
+                cId,
+                cName,
+                null,
+                null
         );
     }
 }

@@ -132,6 +132,34 @@ const LoginPage = () => {
             <button
               type="button"
               className="btn btn-outline-success btn-sm text-start d-flex justify-content-between align-items-center"
+              onClick={() => handleQuickLogin("student@cb.com", "student28")}
+              disabled={loading}
+            >
+              <span><i className="bi bi-person-fill me-1"></i> Demo Student</span>
+              <span className="badge bg-success">student@cb.com</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm text-start d-flex justify-content-between align-items-center"
+              onClick={() => handleQuickLogin("tpo@cb.com", "tpo28")}
+              disabled={loading}
+            >
+              <span><i className="bi bi-shield-lock-fill me-1"></i> Demo TPO Officer</span>
+              <span className="badge bg-primary">tpo@cb.com</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-warning text-dark btn-sm text-start d-flex justify-content-between align-items-center"
+              onClick={() => handleQuickLogin("recruiter@cb.com", "rec28")}
+              disabled={loading}
+            >
+              <span><i className="bi bi-building me-1"></i> Demo Recruiter</span>
+              <span className="badge bg-warning text-dark">recruiter@cb.com</span>
+            </button>
+            <div className="text-center text-muted" style={{ fontSize: "0.7rem" }}>── legacy test accounts ──</div>
+            <button
+              type="button"
+              className="btn btn-outline-success btn-sm text-start d-flex justify-content-between align-items-center"
               onClick={() => handleQuickLogin("arun.student@gct.ac.in", "Student@123")}
               disabled={loading}
             >
@@ -144,7 +172,7 @@ const LoginPage = () => {
               onClick={() => handleQuickLogin("tpo@gct.ac.in", "Tpo@123")}
               disabled={loading}
             >
-              <span><i className="bi bi-shield-lock-fill me-1"></i> TPO: Dr. S. Ramanathan</span>
+              <span><i className="bi bi-shield-lock-fill me-1"></i> TPO: Dr. K. Rangarajan</span>
               <span className="badge bg-primary">Login as TPO</span>
             </button>
             <button

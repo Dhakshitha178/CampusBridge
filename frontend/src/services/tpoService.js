@@ -1,7 +1,7 @@
 import apiClient from "./apiClient";
 
 export const getTpoDashboard = async () => {
-  const response = await apiClient.get("/tpo/dashboard");
+  const response = await apiClient.get("/tpo/dashboard-stats");
   return response.data;
 };
 
@@ -16,25 +16,34 @@ export const getCompaniesList = async () => {
 };
 
 export const verifyCompany = async (companyId, verified) => {
-  const response = await apiClient.put(`/tpo/companies/${companyId}/verify?verified=${verified}`);
+  const response = await apiClient.post(`/tpo/companies/${companyId}/verify?verified=${verified}`);
   return response.data;
 };
 
 export const getPendingDrives = async () => {
-  const response = await apiClient.get("/tpo/drives/pending");
-  return response.data;
+  // Backend returns all drives; filter PENDING_APPROVAL on frontend
+  const response = await apiClient.get("/tpo/drives");
+  const result = response.data;
+  if (result.success && result.data) {
+    result.data = result.data.filter(
+      (d) => d.status === "PENDING_APPROVAL" || d.status === "PENDING"
+    );
+  }
+  return result;
 };
 
 export const approveDrive = async (driveId, approvalNotes) => {
-  const response = await apiClient.put(`/tpo/drives/${driveId}/approve`, null, {
-    params: { approvalNotes },
+  const response = await apiClient.post(`/tpo/drives/${driveId}/review`, {
+    approved: true,
+    notes: approvalNotes,
   });
   return response.data;
 };
 
 export const rejectDrive = async (driveId, rejectionReason) => {
-  const response = await apiClient.put(`/tpo/drives/${driveId}/reject`, null, {
-    params: { rejectionReason },
+  const response = await apiClient.post(`/tpo/drives/${driveId}/review`, {
+    approved: false,
+    notes: rejectionReason,
   });
   return response.data;
 };
@@ -45,7 +54,7 @@ export const getLiveMonitor = async () => {
 };
 
 export const getCentralCalendar = async () => {
-  const response = await apiClient.get("/tpo/central-calendar");
+  const response = await apiClient.get("/tpo/calendar");
   return response.data;
 };
 
@@ -55,13 +64,20 @@ export const getRescheduleRequests = async () => {
 };
 
 export const approveRescheduleRequest = async (requestId, payload) => {
-  const response = await apiClient.put(`/tpo/reschedule-requests/${requestId}/approve`, payload);
+  const response = await apiClient.post(`/tpo/reschedule-requests/${requestId}/review`, {
+    approved: true,
+    tpoRemarks: payload.coordinatorNotes,
+    newDate: payload.newInterviewDate,
+    newStartTime: payload.newStartTime,
+    newEndTime: payload.newEndTime,
+  });
   return response.data;
 };
 
 export const rejectRescheduleRequest = async (requestId, rejectionReason) => {
-  const response = await apiClient.put(`/tpo/reschedule-requests/${requestId}/reject`, null, {
-    params: { rejectionReason },
+  const response = await apiClient.post(`/tpo/reschedule-requests/${requestId}/review`, {
+    approved: false,
+    tpoRemarks: rejectionReason,
   });
   return response.data;
 };
@@ -127,6 +143,7 @@ export const createAnnouncement = async (announcementData) => {
   return response.data;
 };
 
+// NOTE: Backend DELETE endpoint for announcements is not yet implemented
 export const deleteAnnouncement = async (id) => {
   const response = await apiClient.delete(`/tpo/announcements/${id}`);
   return response.data;

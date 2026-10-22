@@ -1,7 +1,9 @@
 package com.campusbridge.placement.controller.auth;
 
+import com.campusbridge.placement.dto.request.ForgotPasswordRequest;
 import com.campusbridge.placement.dto.request.LoginRequest;
 import com.campusbridge.placement.dto.request.RecruiterRegisterRequest;
+import com.campusbridge.placement.dto.request.ResetPasswordRequest;
 import com.campusbridge.placement.dto.request.StudentRegisterRequest;
 import com.campusbridge.placement.dto.request.TpoRegisterRequest;
 import com.campusbridge.placement.dto.response.ApiResponse;
@@ -89,5 +91,27 @@ public class AuthController {
     @GetMapping("/companies")
     public ResponseEntity<ApiResponse<List<Company>>> getCompanies() {
         return ResponseEntity.ok(ApiResponse.ok(companyRepository.findAll()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.forgotPassword(request);
+            return ResponseEntity.ok(ApiResponse.ok("Password reset code sent to your email.", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request);
+            return ResponseEntity.ok(ApiResponse.ok("Password reset successful. You can now login with your new password.", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

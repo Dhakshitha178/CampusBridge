@@ -45,22 +45,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleQuickLogin = async (email, password) => {
-    setError("");
-    setLoading(true);
-    setForm({ email, password });
-    try {
-      const res = await loginUser({ email, password });
-      if (res.success && res.data) {
-        handleAuthSuccess(res.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Quick demo login failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="card shadow-lg border-0" style={{ maxWidth: "460px", width: "100%", borderRadius: "12px" }}>
       <div className="card-header text-white text-center py-4" style={{ background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)", borderTopLeftRadius: "12px", borderTopRightRadius: "12px" }}>
@@ -110,6 +94,12 @@ const LoginPage = () => {
             </div>
           </div>
 
+          <div className="text-end mb-3">
+            <Link to="/forgot-password" className="text-decoration-none small fw-semibold" style={{ color: "#0f4c81" }}>
+              Forgot Password?
+            </Link>
+          </div>
+
           <button
             className="btn btn-primary w-100 py-2 fw-semibold mb-3"
             type="submit"
@@ -123,69 +113,6 @@ const LoginPage = () => {
             )}
           </button>
         </form>
-
-        <div className="mt-2 pt-3 border-top">
-          <div className="small text-muted fw-bold text-uppercase mb-2 text-center" style={{ fontSize: "0.75rem" }}>
-            Demo Quick Logins (Evaluator Shortcuts)
-          </div>
-          <div className="d-grid gap-2">
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("student@cb.com", "student28")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-person-fill me-1"></i> Demo Student</span>
-              <span className="badge bg-success">student@cb.com</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("tpo@cb.com", "tpo28")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-shield-lock-fill me-1"></i> Demo TPO Officer</span>
-              <span className="badge bg-primary">tpo@cb.com</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-warning text-dark btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("recruiter@cb.com", "rec28")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-building me-1"></i> Demo Recruiter</span>
-              <span className="badge bg-warning text-dark">recruiter@cb.com</span>
-            </button>
-            <div className="text-center text-muted" style={{ fontSize: "0.7rem" }}>── legacy test accounts ──</div>
-            <button
-              type="button"
-              className="btn btn-outline-success btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("arun.student@gct.ac.in", "Student@123")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-person-fill me-1"></i> Student: Arun Prakash</span>
-              <span className="badge bg-success">Login as Student</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("tpo@gct.ac.in", "Tpo@123")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-shield-lock-fill me-1"></i> TPO: Dr. K. Rangarajan</span>
-              <span className="badge bg-primary">Login as TPO</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-warning text-dark btn-sm text-start d-flex justify-content-between align-items-center"
-              onClick={() => handleQuickLogin("recruiter.zoho@zoho.com", "Zoho@123")}
-              disabled={loading}
-            >
-              <span><i className="bi bi-building me-1"></i> Recruiter: Zoho Corp</span>
-              <span className="badge bg-warning text-dark">Login as Recruiter</span>
-            </button>
-          </div>
-        </div>
 
         <div className="text-center mt-3 pt-2 text-muted small">
           New Student? <Link to="/register" className="text-decoration-none fw-semibold">Register here</Link>

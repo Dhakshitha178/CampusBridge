@@ -1,6 +1,7 @@
 package com.campusbridge.placement.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,16 +27,20 @@ public class Company {
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    @JsonProperty("location")
     private String city;
     private String state;
 
     @Column(name = "hr_contact_name")
+    @JsonProperty("contactPerson")
     private String hrContactName;
 
     @Column(name = "hr_contact_email")
+    @JsonProperty("contactEmail")
     private String hrContactEmail;
 
     @Column(name = "hr_contact_phone")
+    @JsonProperty("contactPhone")
     private String hrContactPhone;
 
     private Boolean verified = true;

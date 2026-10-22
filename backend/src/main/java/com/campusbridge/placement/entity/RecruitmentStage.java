@@ -2,11 +2,13 @@ package com.campusbridge.placement.entity;
 
 import com.campusbridge.placement.entity.enums.StageType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "recruitment_stages")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class RecruitmentStage {
 
     @Id
@@ -25,7 +27,7 @@ public class RecruitmentStage {
     private String stageName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "stage_type", nullable = false)
+    @Column(name = "stage_type", nullable = false, length = 50)
     private StageType stageType;
 
     @Column(columnDefinition = "TEXT")

@@ -35,3 +35,13 @@ export const getDepartments = async (collegeId) => {
   const response = await apiClient.get(url);
   return response.data;
 };
+
+export const forgotPassword = async (email) => {
+  const response = await apiClient.post("/auth/forgot-password", { email });
+  return response.data;
+};
+
+export const resetPassword = async (token, newPassword) => {
+  const response = await apiClient.post("/auth/reset-password", { token, newPassword });
+  return response.data;
+};

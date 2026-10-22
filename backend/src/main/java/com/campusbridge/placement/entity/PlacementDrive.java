@@ -3,6 +3,7 @@ package com.campusbridge.placement.entity;
 import com.campusbridge.placement.entity.enums.DriveStatus;
 import com.campusbridge.placement.entity.enums.EmploymentType;
 import com.campusbridge.placement.entity.enums.WorkMode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -64,6 +65,7 @@ public class PlacementDrive {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User createdBy;
 
     @OneToOne(mappedBy = "drive", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

@@ -59,7 +59,7 @@ const TpoDashboard = () => {
 
   if (loading) return <Loader message="Loading TPO placement cell dashboard..." />;
 
-  const hasConflicts = stats && stats.interviewConflicts > 0;
+  const hasConflicts = stats && stats.detectedConflicts > 0;
   const hasReschedules = reschedules.length > 0;
 
   return (
@@ -96,7 +96,7 @@ const TpoDashboard = () => {
               <div className="p-3 bg-danger-subtle border border-danger-subtle rounded d-flex justify-content-between align-items-center">
                 <div>
                   <h6 className="text-danger fw-bold mb-1">
-                    <i className="bi bi-exclamation-octagon-fill me-1"></i> {stats.interviewConflicts} Scheduling Conflict(s)
+                    <i className="bi bi-exclamation-octagon-fill me-1"></i> {stats.detectedConflicts} Scheduling Conflict(s)
                   </h6>
                   <span className="small text-danger">Overlapping candidate interviews require coordinator resolution.</span>
                 </div>
@@ -129,7 +129,7 @@ const TpoDashboard = () => {
         <div className="col-md-3 col-sm-6">
           <div className="stat-card">
             <div className="stat-label">Registered Students</div>
-            <div className="stat-number">{stats?.registeredStudents || 0}</div>
+            <div className="stat-number">{stats?.totalStudents || 0}</div>
             <div className="small text-muted mt-1">Campus talent pool</div>
           </div>
         </div>
@@ -150,7 +150,7 @@ const TpoDashboard = () => {
         <div className="col-md-3 col-sm-6">
           <div className="stat-card card-accent-teal">
             <div className="stat-label">Total Selections</div>
-            <div className="stat-number text-success">{stats?.totalSelections || 0}</div>
+            <div className="stat-number text-success">{stats?.totalOffers || 0}</div>
             <div className="small text-success mt-1">Placed candidates</div>
           </div>
         </div>
@@ -168,7 +168,7 @@ const TpoDashboard = () => {
         <div className="col-md-3 col-sm-6">
           <div className="stat-card">
             <div className="stat-label">Interviews Scheduled</div>
-            <div className="stat-number">{stats?.interviewsScheduled || 0}</div>
+            <div className="stat-number">{stats?.interviewsToday || 0}</div>
             <div className="small text-muted mt-1">Rounds lined up</div>
           </div>
         </div>
@@ -182,7 +182,7 @@ const TpoDashboard = () => {
         <div className="col-md-3 col-sm-6">
           <div className="stat-card card-accent-danger">
             <div className="stat-label">Interview Conflicts</div>
-            <div className="stat-number text-danger">{stats?.interviewConflicts || 0}</div>
+            <div className="stat-number text-danger">{stats?.detectedConflicts || 0}</div>
             <div className="small text-muted mt-1">Schedule overlaps</div>
           </div>
         </div>

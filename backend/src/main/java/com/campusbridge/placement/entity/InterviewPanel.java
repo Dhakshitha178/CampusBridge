@@ -1,11 +1,13 @@
 package com.campusbridge.placement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "interview_panels")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class InterviewPanel {
 
     @Id
@@ -14,6 +16,7 @@ public class InterviewPanel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Company company;
 
     @Column(name = "panel_name", nullable = false)

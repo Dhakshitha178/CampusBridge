@@ -5,6 +5,7 @@ import com.campusbridge.placement.entity.RecruitmentStage;
 import com.campusbridge.placement.entity.enums.DriveStatus;
 import com.campusbridge.placement.entity.enums.EmploymentType;
 import com.campusbridge.placement.entity.enums.WorkMode;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -161,4 +162,40 @@ public class DriveResponse {
     public void setStudentEligibility(EligibilityResultDto studentEligibility) { this.studentEligibility = studentEligibility; }
     public Long getTotalApplications() { return totalApplications; }
     public void setTotalApplications(Long totalApplications) { this.totalApplications = totalApplications; }
+
+    // Frontend-friendly aliases
+    @JsonProperty("title")
+    public String getTitle() { return jobTitle; }
+
+    @JsonProperty("description")
+    public String getDescription() { return jobDescription; }
+
+    @JsonProperty("salaryPackage")
+    public Double getSalaryPackage() { return packageLpa; }
+
+    @JsonProperty("jobRole")
+    public String getJobRole() { return jobTitle; }
+
+    // Nested criteria object for frontend consumption
+    @JsonProperty("criteria")
+    public CriteriaDto getCriteria() {
+        return new CriteriaDto(minCgpa, maxBacklogs, graduationYear, allowedDepartments, requiredSkills);
+    }
+
+    public static class CriteriaDto {
+        public Double minCgpa;
+        public Integer maxBacklogs;
+        public Integer graduationYear;
+        public String allowedDepartments;
+        public String requiredSkills;
+
+        public CriteriaDto() {}
+        public CriteriaDto(Double minCgpa, Integer maxBacklogs, Integer graduationYear, String allowedDepartments, String requiredSkills) {
+            this.minCgpa = minCgpa;
+            this.maxBacklogs = maxBacklogs;
+            this.graduationYear = graduationYear;
+            this.allowedDepartments = allowedDepartments;
+            this.requiredSkills = requiredSkills;
+        }
+    }
 }

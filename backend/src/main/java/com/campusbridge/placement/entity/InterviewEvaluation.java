@@ -1,11 +1,13 @@
 package com.campusbridge.placement.entity;
 
 import com.campusbridge.placement.entity.enums.EvaluationDecision;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "interview_evaluations")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class InterviewEvaluation {
 
     @Id
@@ -14,10 +16,12 @@ public class InterviewEvaluation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Interview interview;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Application application;
 
     @Column(name = "technical_score")

@@ -1,7 +1,9 @@
 package com.campusbridge.placement.service.auth;
 
+import com.campusbridge.placement.dto.request.ForgotPasswordRequest;
 import com.campusbridge.placement.dto.request.LoginRequest;
 import com.campusbridge.placement.dto.request.RecruiterRegisterRequest;
+import com.campusbridge.placement.dto.request.ResetPasswordRequest;
 import com.campusbridge.placement.dto.request.StudentRegisterRequest;
 import com.campusbridge.placement.dto.request.TpoRegisterRequest;
 import com.campusbridge.placement.dto.response.AuthResponse;
@@ -11,9 +13,12 @@ import com.campusbridge.placement.entity.enums.PlacementStatus;
 import com.campusbridge.placement.entity.enums.Role;
 import com.campusbridge.placement.repository.*;
 import com.campusbridge.placement.security.JwtUtil;
+import com.campusbridge.placement.util.EmailUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
@@ -25,6 +30,8 @@ public class AuthService {
     private final CollegeRepository collegeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailUtil emailUtil;
 
     public AuthService(
             UserRepository userRepository,
@@ -33,7 +40,9 @@ public class AuthService {
             CompanyRepository companyRepository,
             CollegeRepository collegeRepository,
             PasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EmailUtil emailUtil) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.recruiterRepository = recruiterRepository;
@@ -41,6 +50,8 @@ public class AuthService {
         this.collegeRepository = collegeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailUtil = emailUtil;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -230,5 +241,60 @@ public class AuthService {
                 null,
                 null
         );
+    }
+
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("No account found with email: " + request.getEmail()));
+
+        // Generate a 6-digit OTP code
+        String resetCode = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        // Invalidate any existing tokens for this user
+        passwordResetTokenRepository.deleteByUserId(user.getId());
+
+        // Create new token valid for 15 minutes
+        PasswordResetToken resetToken = new PasswordResetToken(
+                resetCode,
+                user,
+                LocalDateTime.now().plusMinutes(15)
+        );
+        passwordResetTokenRepository.save(resetToken);
+
+        // Send email with reset code
+        String subject = "CampusBridge - Password Reset Code";
+        String body = String.format(
+                "Dear %s,\n\nYour password reset verification code is: %s\n\n" +
+                "This code is valid for 15 minutes. If you did not request a password reset, please ignore this email.\n\n" +
+                "Best regards,\nCampusBridge Placement Cell",
+                user.getFullName(), resetCode);
+        emailUtil.sendEmail(user.getEmail(), subject, body);
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new RuntimeException("Invalid reset code. Please request a new one."));
+
+        if (resetToken.isUsed()) {
+            throw new RuntimeException("This reset code has already been used. Please request a new one.");
+        }
+
+        if (resetToken.isExpired()) {
+            throw new RuntimeException("Reset code has expired. Please request a new one.");
+        }
+
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long.");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
     }
 }

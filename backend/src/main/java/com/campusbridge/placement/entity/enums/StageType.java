@@ -2,6 +2,7 @@ package com.campusbridge.placement.entity.enums;
 
 public enum StageType {
     APTITUDE,
+    ASSESSMENT,
     CODING,
     TECHNICAL_INTERVIEW,
     MANAGERIAL_INTERVIEW,

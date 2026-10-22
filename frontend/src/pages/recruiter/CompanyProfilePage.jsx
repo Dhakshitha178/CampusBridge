@@ -15,8 +15,16 @@ const CompanyProfilePage = () => {
       setLoading(true);
       const res = await getCompanyProfile();
       if (res.success && res.data) {
-        setProfile(res.data);
-        setForm(res.data);
+        // Map backend field names to frontend display names
+        const mapped = {
+          ...res.data,
+          contactPerson: res.data.hrContactName || res.data.contactPerson,
+          contactEmail: res.data.hrContactEmail || res.data.contactEmail,
+          contactPhone: res.data.hrContactPhone || res.data.contactPhone,
+          location: res.data.city || res.data.location,
+        };
+        setProfile(mapped);
+        setForm(mapped);
       }
     } catch (err) {
       console.error("Error loading company profile:", err);

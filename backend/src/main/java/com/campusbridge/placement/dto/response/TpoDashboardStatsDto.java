@@ -1,5 +1,7 @@
 package com.campusbridge.placement.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class TpoDashboardStatsDto {
     private long totalStudents;
     private long placedStudents;

@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS recruitment_stages (
     drive_id BIGINT NOT NULL,
     stage_order INT NOT NULL,
     stage_name VARCHAR(100) NOT NULL,
-    stage_type ENUM('APTITUDE', 'CODING', 'TECHNICAL_INTERVIEW', 'MANAGERIAL_INTERVIEW', 'HR_INTERVIEW', 'GROUP_DISCUSSION', 'FINAL_RESULT', 'OTHER') NOT NULL,
+    stage_type VARCHAR(50) NOT NULL,
     description TEXT,
     cut_off_score DOUBLE,
     is_final_stage BOOLEAN DEFAULT FALSE,

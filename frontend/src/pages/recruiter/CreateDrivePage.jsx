@@ -17,6 +17,7 @@ const CreateDrivePage = () => {
     location: "Chennai / Bangalore",
     workMode: "HYBRID",
     applicationDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    driveDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     criteria: {
       minCgpa: 7.5,
       maxBacklogs: 0,
@@ -207,7 +208,7 @@ const CreateDrivePage = () => {
                   value={form.workMode}
                   onChange={handleChange}
                 >
-                  <option value="ONSITE">Onsite</option>
+                  <option value="ON_SITE">Onsite</option>
                   <option value="HYBRID">Hybrid</option>
                   <option value="REMOTE">Remote</option>
                 </select>
@@ -219,6 +220,18 @@ const CreateDrivePage = () => {
                   name="applicationDeadline"
                   className="form-control form-control-sm"
                   value={form.applicationDeadline}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label small fw-semibold">Drive Date *</label>
+                <input
+                  type="date"
+                  name="driveDate"
+                  className="form-control form-control-sm"
+                  value={form.driveDate}
                   onChange={handleChange}
                   required
                 />
@@ -366,6 +379,8 @@ const CreateDrivePage = () => {
                       onChange={(e) => handleStageChange(idx, "stageType", e.target.value)}
                     >
                       <option value="ASSESSMENT">Online Assessment</option>
+                      <option value="APTITUDE">Aptitude Test</option>
+                      <option value="CODING">Coding Challenge</option>
                       <option value="TECHNICAL_INTERVIEW">Technical Interview</option>
                       <option value="MANAGERIAL_INTERVIEW">Managerial Interview</option>
                       <option value="HR_INTERVIEW">HR Interview</option>

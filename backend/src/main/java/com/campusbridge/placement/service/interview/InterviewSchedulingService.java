@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -327,5 +328,9 @@ public class InterviewSchedulingService {
         applicationRepository.save(application);
 
         return savedEval;
+    }
+
+    public Optional<InterviewEvaluation> getEvaluationByInterviewId(Long interviewId) {
+        return evaluationRepository.findByInterviewId(interviewId);
     }
 }

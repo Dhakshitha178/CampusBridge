@@ -6,6 +6,9 @@ public class TpoRegisterRequest {
     private String password;
     private String phoneNumber;
     private Long collegeId;
+    private String collegeName;
+    private String collegeCode;
+    private String designation;
 
     public TpoRegisterRequest() {}
 
@@ -19,4 +22,10 @@ public class TpoRegisterRequest {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public Long getCollegeId() { return collegeId; }
     public void setCollegeId(Long collegeId) { this.collegeId = collegeId; }
+    public String getCollegeName() { return collegeName; }
+    public void setCollegeName(String collegeName) { this.collegeName = collegeName; }
+    public String getCollegeCode() { return collegeCode; }
+    public void setCollegeCode(String collegeCode) { this.collegeCode = collegeCode; }
+    public String getDesignation() { return designation; }
+    public void setDesignation(String designation) { this.designation = designation; }
 }

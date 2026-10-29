@@ -25,8 +25,11 @@ const DriveDetailsPage = () => {
 
         if (driveRes.success && driveRes.data) {
           setDrive(driveRes.data);
+          if (driveRes.data.studentEligibility) {
+            setEligibility(driveRes.data.studentEligibility);
+          }
         }
-        if (eligRes.success && eligRes.data) {
+        if (eligRes && eligRes.success && eligRes.data) {
           setEligibility(eligRes.data);
         }
         if (appsRes.success && appsRes.data) {
@@ -66,7 +69,13 @@ const DriveDetailsPage = () => {
   if (loading) return <Loader message="Loading placement drive details..." />;
   if (!drive) return <div className="alert alert-warning">Drive not found.</div>;
 
-  const isEligible = eligibility ? eligibility.isEligible : true;
+  const isEligible = eligibility
+    ? eligibility.isEligible !== undefined
+      ? eligibility.isEligible
+      : eligibility.eligible !== undefined
+      ? eligibility.eligible
+      : true
+    : true;
 
   return (
     <div>
@@ -92,8 +101,8 @@ const DriveDetailsPage = () => {
               <span className="badge bg-primary-subtle text-primary border mb-2">
                 <i className="bi bi-building me-1"></i> {drive.companyName}
               </span>
-              <h3 className="fw-bold text-dark mb-1">{drive.title}</h3>
-              <p className="text-secondary small mb-2">{drive.jobRole} &bull; Job ID: #{drive.id}</p>
+              <h3 className="fw-bold text-dark mb-1">{drive.jobTitle || drive.title}</h3>
+              <p className="text-secondary small mb-2">{drive.jobRole || drive.jobTitle} &bull; Job ID: #{drive.id}</p>
             </div>
 
             <div className="text-end">
@@ -129,7 +138,7 @@ const DriveDetailsPage = () => {
           <div className="d-flex flex-wrap gap-2 mt-3 pt-3 border-top">
             <div className="px-3 py-2 bg-light rounded text-center">
               <span className="small text-muted d-block">Package (CTC)</span>
-              <strong className="text-success">{drive.salaryPackage} LPA</strong>
+              <strong className="text-success">{drive.packageLpa || drive.salaryPackage} LPA</strong>
             </div>
             <div className="px-3 py-2 bg-light rounded text-center">
               <span className="small text-muted d-block">Work Mode</span>
@@ -145,7 +154,15 @@ const DriveDetailsPage = () => {
             </div>
             <div className="px-3 py-2 bg-light rounded text-center">
               <span className="small text-muted d-block">Deadline</span>
-              <strong className="text-danger">{drive.applicationDeadline}</strong>
+              <strong className="text-danger">
+                {drive.applicationDeadline
+                  ? new Date(drive.applicationDeadline).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "Open"}
+              </strong>
             </div>
           </div>
         </div>
@@ -159,7 +176,7 @@ const DriveDetailsPage = () => {
               <h5><i className="bi bi-file-text me-2 text-primary"></i> Job Description &amp; Role Overview</h5>
             </div>
             <div className="content-card-body">
-              <p style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}>{drive.description}</p>
+              <p style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}>{drive.jobDescription || drive.description}</p>
             </div>
           </div>
 
@@ -206,29 +223,40 @@ const DriveDetailsPage = () => {
               <h5><i className="bi bi-shield-check me-2 text-primary"></i> Configured Eligibility Criteria</h5>
             </div>
             <div className="content-card-body">
-              {drive.criteria ? (
-                <div className="small">
-                  <div className="d-flex justify-content-between py-2 border-bottom">
-                    <span className="text-muted">Minimum CGPA</span>
-                    <strong>{drive.criteria.minCgpa}</strong>
-                  </div>
-                  <div className="d-flex justify-content-between py-2 border-bottom">
-                    <span className="text-muted">Maximum Standing Backlogs</span>
-                    <strong>{drive.criteria.maxBacklogs}</strong>
-                  </div>
-                  <div className="d-flex justify-content-between py-2 border-bottom">
-                    <span className="text-muted">Eligible Graduation Batch</span>
-                    <strong>{drive.criteria.graduationYear}</strong>
-                  </div>
-                  <div className="py-2 border-bottom">
-                    <span className="text-muted d-block mb-1">Eligible Departments</span>
-                    <strong>{drive.criteria.allowedDepartments || "All Engineering Disciplines"}</strong>
-                  </div>
-                  <div className="py-2">
-                    <span className="text-muted d-block mb-1">Required Skills</span>
-                    <strong>{drive.criteria.requiredSkills || "General Aptitude"}</strong>
-                  </div>
-                </div>
+              {drive.criteria || drive.minCgpa !== undefined || drive.allowedDepartments ? (
+                (() => {
+                  const crit = drive.criteria || {
+                    minCgpa: drive.minCgpa,
+                    maxBacklogs: drive.maxBacklogs,
+                    graduationYear: drive.graduationYear,
+                    allowedDepartments: drive.allowedDepartments,
+                    requiredSkills: drive.requiredSkills,
+                  };
+                  return (
+                    <div className="small">
+                      <div className="d-flex justify-content-between py-2 border-bottom">
+                        <span className="text-muted">Minimum CGPA</span>
+                        <strong>{crit.minCgpa}</strong>
+                      </div>
+                      <div className="d-flex justify-content-between py-2 border-bottom">
+                        <span className="text-muted">Maximum Standing Backlogs</span>
+                        <strong>{crit.maxBacklogs}</strong>
+                      </div>
+                      <div className="d-flex justify-content-between py-2 border-bottom">
+                        <span className="text-muted">Eligible Graduation Batch</span>
+                        <strong>{crit.graduationYear}</strong>
+                      </div>
+                      <div className="py-2 border-bottom">
+                        <span className="text-muted d-block mb-1">Eligible Departments</span>
+                        <strong>{crit.allowedDepartments || "All Engineering Disciplines"}</strong>
+                      </div>
+                      <div className="py-2">
+                        <span className="text-muted d-block mb-1">Required Skills</span>
+                        <strong>{crit.requiredSkills || "General Aptitude"}</strong>
+                      </div>
+                    </div>
+                  );
+                })()
               ) : (
                 <span className="text-muted small">No special criteria set. Open to all students.</span>
               )}

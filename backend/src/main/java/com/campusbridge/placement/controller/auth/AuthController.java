@@ -93,6 +93,55 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(companyRepository.findAll()));
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyEmail(@RequestBody java.util.Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String code = request.get("code");
+            AuthResponse response = authService.verifyEmail(email, code);
+            return ResponseEntity.ok(ApiResponse.ok("Email verified and account activated successfully!", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/approve-user")
+    public ResponseEntity<ApiResponse<AuthResponse>> approveUser(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String email) {
+        try {
+            if (userId == null && email != null) {
+                AuthResponse status = authService.getUserStatus(email);
+                userId = status.getUserId();
+            }
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("userId or email is required"));
+            }
+            AuthResponse response = authService.approveUser(userId);
+            return ResponseEntity.ok(ApiResponse.ok("User approved and accredited successfully!", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<AuthResponse>> getUserStatus(@RequestParam String email) {
+        try {
+            AuthResponse response = authService.getUserStatus(email);
+            return ResponseEntity.ok(ApiResponse.ok("User status retrieved", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pending-users")
+    public ResponseEntity<ApiResponse<List<com.campusbridge.placement.entity.User>>> getPendingUsers() {
+        return ResponseEntity.ok(ApiResponse.ok(authService.getPendingUsers()));
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {

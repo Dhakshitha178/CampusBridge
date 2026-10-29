@@ -148,3 +148,13 @@ export const deleteAnnouncement = async (id) => {
   const response = await apiClient.delete(`/tpo/announcements/${id}`);
   return response.data;
 };
+
+export const getPendingUsers = async () => {
+  const response = await apiClient.get("/tpo/pending-users");
+  return response.data;
+};
+
+export const approveUser = async (userId) => {
+  const response = await apiClient.post(`/tpo/users/${userId}/approve`);
+  return response.data;
+};

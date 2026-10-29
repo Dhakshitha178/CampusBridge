@@ -4,6 +4,7 @@ import com.campusbridge.placement.dto.request.*;
 import com.campusbridge.placement.dto.response.*;
 import com.campusbridge.placement.entity.*;
 import com.campusbridge.placement.entity.enums.ApplicationStatus;
+import com.campusbridge.placement.repository.PlacementDriveRepository;
 import com.campusbridge.placement.repository.RecruiterRepository;
 import com.campusbridge.placement.service.interview.InterviewSchedulingService;
 import com.campusbridge.placement.service.interview.SchedulingConflictService;
@@ -33,6 +34,7 @@ public class RecruiterController {
     private final OfferService offerService;
     private final CollegeRecommendationService recommendationService;
     private final SchedulingConflictService conflictService;
+    private final PlacementDriveRepository driveRepository;
 
     public RecruiterController(
             RecruiterRepository recruiterRepository,
@@ -42,7 +44,8 @@ public class RecruiterController {
             InterviewSchedulingService interviewSchedulingService,
             OfferService offerService,
             CollegeRecommendationService recommendationService,
-            SchedulingConflictService conflictService) {
+            SchedulingConflictService conflictService,
+            PlacementDriveRepository driveRepository) {
         this.recruiterRepository = recruiterRepository;
         this.companyService = companyService;
         this.driveService = driveService;
@@ -51,6 +54,7 @@ public class RecruiterController {
         this.offerService = offerService;
         this.recommendationService = recommendationService;
         this.conflictService = conflictService;
+        this.driveRepository = driveRepository;
     }
 
     // ──────────────────────────────────────────────────────────
@@ -177,23 +181,33 @@ public class RecruiterController {
 
     @GetMapping("/{recruiterId}/drives")
     public ResponseEntity<ApiResponse<List<DriveResponse>>> getDrives(@PathVariable Long recruiterId) {
-        Recruiter recruiter = recruiterRepository.findById(recruiterId)
-                .orElseThrow(() -> new RuntimeException("Recruiter not found: " + recruiterId));
-        return ResponseEntity.ok(ApiResponse.ok(driveService.getDrivesForCompany(recruiter.getCompany().getId())));
+        Recruiter current = getCurrentRecruiter();
+        if (!recruiterId.equals(current.getId())) {
+            throw new RuntimeException("Access Denied: You cannot access placement drives for another recruiter.");
+        }
+        return ResponseEntity.ok(ApiResponse.ok(driveService.getDrivesForCompany(current.getCompany().getId())));
     }
 
     @PostMapping("/{recruiterId}/drives")
     public ResponseEntity<ApiResponse<DriveResponse>> createDrive(
             @PathVariable Long recruiterId,
             @RequestBody DriveCreateRequest request) {
-        Recruiter recruiter = recruiterRepository.findById(recruiterId)
-                .orElseThrow(() -> new RuntimeException("Recruiter not found: " + recruiterId));
+        Recruiter current = getCurrentRecruiter();
+        if (!recruiterId.equals(current.getId())) {
+            throw new RuntimeException("Access Denied: You cannot create drives for another recruiter.");
+        }
         return ResponseEntity.ok(ApiResponse.ok("Drive submitted for TPO approval",
-                driveService.createDrive(recruiter, request)));
+                driveService.createDrive(current, request)));
     }
 
     @GetMapping("/drives/{driveId}/applicants")
     public ResponseEntity<ApiResponse<List<ApplicationStatusResponse>>> getDriveApplicants(@PathVariable Long driveId) {
+        Recruiter current = getCurrentRecruiter();
+        PlacementDrive drive = driveRepository.findById(driveId)
+                .orElseThrow(() -> new RuntimeException("Placement drive not found: " + driveId));
+        if (!drive.getCompany().getId().equals(current.getCompany().getId())) {
+            throw new RuntimeException("Access Denied: You cannot view applicants for another company's drive.");
+        }
         return ResponseEntity.ok(ApiResponse.ok(applicationService.getDriveApplications(driveId)));
     }
 
@@ -203,6 +217,7 @@ public class RecruiterController {
             @RequestParam(required = false) Long nextStageId,
             @RequestParam ApplicationStatus status,
             @RequestParam(required = false) String remarks) {
+        getCurrentRecruiter();
         return ResponseEntity.ok(ApiResponse.ok("Application stage updated",
                 applicationService.updateStage(applicationId, nextStageId, status, remarks, "Recruiter")));
     }
@@ -211,6 +226,12 @@ public class RecruiterController {
     public ResponseEntity<ApiResponse<List<ApplicationStatusResponse>>> bulkUploadResults(
             @PathVariable Long driveId,
             @RequestBody List<BulkResultRowDto> rows) {
+        Recruiter current = getCurrentRecruiter();
+        PlacementDrive drive = driveRepository.findById(driveId)
+                .orElseThrow(() -> new RuntimeException("Placement drive not found: " + driveId));
+        if (!drive.getCompany().getId().equals(current.getCompany().getId())) {
+            throw new RuntimeException("Access Denied: You cannot upload results for another company's drive.");
+        }
         return ResponseEntity.ok(ApiResponse.ok("Bulk results processed successfully",
                 applicationService.bulkProcessResults(driveId, rows, "Recruiter Bulk Upload")));
     }

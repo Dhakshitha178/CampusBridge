@@ -52,6 +52,7 @@ const AppRoutes = () => {
       <Route path="/register-recruiter" element={<RecruiterRegisterPage />} />
       <Route path="/register-tpo" element={<TpoRegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/pending-approval" element={<Navigate to="/login" replace />} />
 
       {/* STUDENT PORTAL ROUTES */}
       <Route

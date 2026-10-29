@@ -26,17 +26,21 @@ const BrowsedrivesPage = () => {
       if (drivesRes.success && drivesRes.data) {
         setDrives(drivesRes.data);
 
-        // Pre-fetch eligibility check for each drive in parallel
+        // Pre-fetch eligibility check for each drive if not already on drive object
         const eligMap = {};
         await Promise.all(
           drivesRes.data.map(async (drive) => {
-            try {
-              const res = await checkDriveEligibility(drive.id);
-              if (res.success && res.data) {
-                eligMap[drive.id] = res.data;
+            if (drive.studentEligibility) {
+              eligMap[drive.id] = drive.studentEligibility;
+            } else {
+              try {
+                const res = await checkDriveEligibility(drive.id);
+                if (res.success && res.data) {
+                  eligMap[drive.id] = res.data;
+                }
+              } catch (e) {
+                console.warn(`Eligibility check failed for drive ${drive.id}`);
               }
-            } catch (e) {
-              console.warn(`Eligibility check failed for drive ${drive.id}`);
             }
           })
         );
@@ -83,12 +87,16 @@ const BrowsedrivesPage = () => {
   };
 
   const filteredDrives = drives.filter((drive) => {
+    const title = drive.jobTitle || drive.title || "";
+    const company = drive.companyName || "";
+    const role = drive.jobRole || drive.jobTitle || "";
     const matchesSearch =
-      drive.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      drive.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (drive.jobRole && drive.jobRole.toLowerCase().includes(searchTerm.toLowerCase()));
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMode = modeFilter === "ALL" || drive.workMode === modeFilter;
-    const matchesSalary = !minSalaryFilter || (drive.salaryPackage && drive.salaryPackage >= minSalaryFilter);
+    const salary = drive.packageLpa || drive.salaryPackage || 0;
+    const matchesSalary = !minSalaryFilter || salary >= minSalaryFilter;
     return matchesSearch && matchesMode && matchesSalary;
   });
 
@@ -169,14 +177,28 @@ const BrowsedrivesPage = () => {
       ) : (
         <div className="row g-4">
           {filteredDrives.map((drive) => {
-            const elig = eligibilityMap[drive.id];
+            const elig = drive.studentEligibility || eligibilityMap[drive.id];
             const isApplied = appliedDriveIds.has(drive.id);
-            const isEligible = elig ? elig.isEligible : true;
+            const isEligible = elig
+              ? elig.isEligible !== undefined
+                ? elig.isEligible
+                : elig.eligible !== undefined
+                ? elig.eligible
+                : true
+              : true;
+
+            const deadlineText = drive.applicationDeadline
+              ? new Date(drive.applicationDeadline).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "Open";
 
             return (
               <div key={drive.id} className="col-md-6">
                 <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: "10px" }}>
-                  <div className="card-body p-4 d-flex flex-direction-column justify-content-between">
+                  <div className="card-body p-4 d-flex flex-column justify-content-between">
                     <div>
                       {/* Top Header */}
                       <div className="d-flex justify-content-between align-items-start mb-2">
@@ -184,8 +206,8 @@ const BrowsedrivesPage = () => {
                           <span className="badge bg-light text-dark border mb-1">
                             <i className="bi bi-building me-1"></i> {drive.companyName}
                           </span>
-                          <h5 className="fw-bold text-dark mb-0">{drive.title}</h5>
-                          <div className="text-muted small">{drive.jobRole}</div>
+                          <h5 className="fw-bold text-dark mb-0">{drive.jobTitle || drive.title}</h5>
+                          <div className="text-muted small">{drive.jobRole || drive.jobTitle}</div>
                         </div>
                         {elig && (
                           <span
@@ -202,7 +224,7 @@ const BrowsedrivesPage = () => {
                       {/* Package & Details Pills */}
                       <div className="d-flex flex-wrap gap-2 my-3">
                         <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                          <i className="bi bi-cash-stack me-1"></i> {drive.salaryPackage} LPA
+                          <i className="bi bi-cash-stack me-1"></i> {drive.packageLpa || drive.salaryPackage} LPA
                         </span>
                         <span className="badge bg-secondary-subtle text-secondary px-2 py-1">
                           <i className="bi bi-geo-alt me-1"></i> {drive.location}
@@ -216,10 +238,10 @@ const BrowsedrivesPage = () => {
                       </div>
 
                       <p className="text-secondary small mb-3" style={{ lineHeight: "1.4" }}>
-                        {drive.description
-                          ? drive.description.length > 140
-                            ? drive.description.substring(0, 140) + "..."
-                            : drive.description
+                        {drive.jobDescription || drive.description
+                          ? (drive.jobDescription || drive.description).length > 140
+                            ? (drive.jobDescription || drive.description).substring(0, 140) + "..."
+                            : (drive.jobDescription || drive.description)
                           : "Exciting campus hiring opportunity."}
                       </p>
 
@@ -267,10 +289,10 @@ const BrowsedrivesPage = () => {
                     </div>
 
                     {/* Bottom Action Footer */}
-                    <div className="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
-                      <div className="small text-muted">
+                    <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 border-top mt-2">
+                      <div className="small text-muted text-nowrap">
                         <i className="bi bi-calendar3 me-1"></i> Deadline:{" "}
-                        <strong className="text-dark">{drive.applicationDeadline}</strong>
+                        <strong className="text-dark">{deadlineText}</strong>
                       </div>
                       <div className="d-flex gap-2">
                         <Link to={`/student/drives/${drive.id}`} className="btn btn-outline-secondary btn-sm">

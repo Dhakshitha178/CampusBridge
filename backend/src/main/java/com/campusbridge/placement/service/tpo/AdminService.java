@@ -29,6 +29,7 @@ public class AdminService {
     private final AnnouncementRepository announcementRepository;
     private final CollegeRepository collegeRepository;
     private final SchedulingConflictService conflictService;
+    private final RecruitmentStageRepository stageRepository;
 
     public AdminService(
             StudentRepository studentRepository,
@@ -40,7 +41,8 @@ public class AdminService {
             RescheduleRequestRepository rescheduleRepository,
             AnnouncementRepository announcementRepository,
             CollegeRepository collegeRepository,
-            SchedulingConflictService conflictService) {
+            SchedulingConflictService conflictService,
+            RecruitmentStageRepository stageRepository) {
         this.studentRepository = studentRepository;
         this.companyRepository = companyRepository;
         this.driveRepository = driveRepository;
@@ -51,6 +53,7 @@ public class AdminService {
         this.announcementRepository = announcementRepository;
         this.collegeRepository = collegeRepository;
         this.conflictService = conflictService;
+        this.stageRepository = stageRepository;
     }
 
     public TpoDashboardStatsDto getDashboardStats(Long collegeId) {
@@ -149,44 +152,77 @@ public class AdminService {
             List<Application> apps = applicationRepository.findByDriveId(drive.getId());
             long totalApplicants = apps.size();
 
-            // Find current active recruitment stage
+            long selectedCount = apps.stream()
+                    .filter(a -> a.getStatus() == ApplicationStatus.SELECTED)
+                    .count();
+
+            long rejectedCount = apps.stream()
+                    .filter(a -> a.getStatus() == ApplicationStatus.REJECTED || a.getStatus() == ApplicationStatus.NOT_SELECTED)
+                    .count();
+
+            long inProgressCount = totalApplicants - selectedCount - rejectedCount;
+            if (inProgressCount < 0) inProgressCount = 0;
+
+            List<RecruitmentStage> stages = stageRepository.findByDriveIdOrderByStageOrderAsc(drive.getId());
+            if ((stages == null || stages.isEmpty()) && drive.getRecruitmentStages() != null) {
+                stages = drive.getRecruitmentStages();
+            }
+
+            List<LiveDriveMonitorDto.StageBreakdownDto> stageBreakdown = new ArrayList<>();
             String currentStageName = "Online Assessment";
             int stageOrder = 1;
-            long candidatesInStage = totalApplicants;
-            String stageStatus = "Active";
-            String pendingActions = "Screening in progress";
+            long candidatesInStage = inProgressCount;
+            String stageStatus = "Round 1 Active";
+            String pendingActions = totalApplicants > 0
+                    ? totalApplicants + " candidate(s) enrolled in recruitment pipeline"
+                    : "No candidates applied yet";
 
-            if (drive.getRecruitmentStages() != null && !drive.getRecruitmentStages().isEmpty()) {
-                RecruitmentStage activeStage = drive.getRecruitmentStages().get(0);
-
-                // Find stage with highest candidate concentration
-                for (RecruitmentStage s : drive.getRecruitmentStages()) {
-                    long count = apps.stream().filter(a -> a.getCurrentStage() != null && a.getCurrentStage().getId().equals(s.getId())).count();
+            if (stages != null && !stages.isEmpty()) {
+                RecruitmentStage activeStage = stages.get(0);
+                for (RecruitmentStage s : stages) {
+                    long count = apps.stream()
+                            .filter(a -> a.getCurrentStage() != null && a.getCurrentStage().getId().equals(s.getId()))
+                            .count();
+                    stageBreakdown.add(new LiveDriveMonitorDto.StageBreakdownDto(s.getStageName(), count));
                     if (count > 0) {
                         activeStage = s;
                         candidatesInStage = count;
-                        break;
                     }
                 }
 
                 currentStageName = activeStage.getStageName();
                 stageOrder = activeStage.getStageOrder();
                 stageStatus = "Round " + stageOrder + " Active";
-                pendingActions = candidatesInStage + " candidates pending evaluation & interview coordination";
+                if (candidatesInStage > 0) {
+                    pendingActions = candidatesInStage + " candidate(s) in " + currentStageName;
+                }
             }
 
-            monitors.add(new LiveDriveMonitorDto(
-                    drive.getId(),
-                    drive.getCompany().getName(),
-                    drive.getCompany().getLogoUrl(),
-                    drive.getJobTitle(),
-                    currentStageName,
-                    stageOrder,
-                    candidatesInStage,
-                    totalApplicants,
-                    stageStatus,
-                    pendingActions
-            ));
+            LiveDriveMonitorDto dto = new LiveDriveMonitorDto();
+            dto.setDriveId(drive.getId());
+            dto.setCompanyName(drive.getCompany() != null ? drive.getCompany().getName() : "");
+            dto.setCompanyLogo(drive.getCompany() != null ? drive.getCompany().getLogoUrl() : "");
+            dto.setDriveTitle(drive.getJobTitle());
+            dto.setJobTitle(drive.getJobTitle());
+            dto.setDriveStatus(drive.getStatus() != null ? drive.getStatus().name() : "ACTIVE");
+            dto.setSalaryPackage(drive.getPackageLpa());
+            dto.setPackageLpa(drive.getPackageLpa());
+            dto.setWorkMode(drive.getWorkMode() != null ? drive.getWorkMode().name() : "ON_SITE");
+            dto.setVacancies(drive.getVacancies() != null ? drive.getVacancies() : 0);
+            dto.setCurrentActiveStage(currentStageName);
+            dto.setCurrentStage(currentStageName);
+            dto.setStageOrder(stageOrder);
+            dto.setCandidatesInStage(candidatesInStage);
+            dto.setTotalApplicants(totalApplicants);
+            dto.setTotalDriveApplicants(totalApplicants);
+            dto.setInProgressCount(inProgressCount);
+            dto.setSelectedCount(selectedCount);
+            dto.setRejectedCount(rejectedCount);
+            dto.setStageStatus(stageStatus);
+            dto.setPendingActions(pendingActions);
+            dto.setStageBreakdown(stageBreakdown);
+
+            monitors.add(dto);
         }
 
         return monitors;

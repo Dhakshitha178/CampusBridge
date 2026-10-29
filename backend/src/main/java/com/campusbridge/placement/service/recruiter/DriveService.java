@@ -157,19 +157,31 @@ public class DriveService {
         return new DriveResponse(updated);
     }
 
+    private Student getAuthenticatedStudent() {
+        try {
+            org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+                return studentRepository.findByUserEmail(auth.getName().trim().toLowerCase()).orElse(null);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public List<DriveResponse> getActiveDrivesForStudent(Long studentId) {
         Student student = studentId != null ? studentRepository.findById(studentId).orElse(null) : null;
-        Long collegeId = student != null && student.getCollege() != null ? student.getCollege().getId() : null;
+        if (student == null) {
+            student = getAuthenticatedStudent();
+        }
 
-        List<PlacementDrive> drives = collegeId != null
-                ? driveRepository.findActiveDrivesForCollege(collegeId)
-                : driveRepository.findActiveDrives();
+        List<PlacementDrive> drives = driveRepository.findActiveDrives();
+        Student finalStudent = student;
 
         return drives.stream().map(d -> {
             DriveResponse resp = new DriveResponse(d);
             resp.setTotalApplications(applicationRepository.countByDriveId(d.getId()));
-            if (student != null) {
-                EligibilityResultDto elig = eligibilityCheckService.checkEligibility(student, d.getEligibilityCriteria());
+            if (finalStudent != null) {
+                EligibilityResultDto elig = eligibilityCheckService.checkEligibility(finalStudent, d.getEligibilityCriteria());
                 resp.setStudentEligibility(elig);
             }
             return resp;
@@ -198,10 +210,9 @@ public class DriveService {
         DriveResponse resp = new DriveResponse(drive);
         resp.setTotalApplications(applicationRepository.countByDriveId(driveId));
 
-        if (studentId != null) {
-            studentRepository.findById(studentId).ifPresent(s -> {
-                resp.setStudentEligibility(eligibilityCheckService.checkEligibility(s, drive.getEligibilityCriteria()));
-            });
+        Student student = studentId != null ? studentRepository.findById(studentId).orElse(null) : getAuthenticatedStudent();
+        if (student != null) {
+            resp.setStudentEligibility(eligibilityCheckService.checkEligibility(student, drive.getEligibilityCriteria()));
         }
         return resp;
     }

@@ -39,4 +39,12 @@ public class DriveController {
     public ResponseEntity<ApiResponse<List<RecruitmentStage>>> getStages(@PathVariable Long driveId) {
         return ResponseEntity.ok(ApiResponse.ok(stageRepository.findByDriveIdOrderByStageOrderAsc(driveId)));
     }
+
+    @GetMapping("/{driveId}/eligibility")
+    public ResponseEntity<ApiResponse<com.campusbridge.placement.dto.response.EligibilityResultDto>> checkEligibility(
+            @PathVariable Long driveId,
+            @RequestParam(required = false) Long studentId) {
+        DriveResponse drive = driveService.getDriveById(driveId, studentId);
+        return ResponseEntity.ok(ApiResponse.ok(drive.getStudentEligibility()));
+    }
 }

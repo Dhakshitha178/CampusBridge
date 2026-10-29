@@ -271,8 +271,17 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <div className="text-center mt-3 pt-2 text-muted small">
+        <div className="text-center mt-3 pt-2 text-muted small border-top">
           Already registered? <Link to="/login" className="text-decoration-none fw-semibold">Sign in here</Link>
+          <div className="mt-2 text-secondary">
+            <Link to="/register-recruiter" className="text-decoration-none mx-1 text-muted">
+              Recruiter Registration
+            </Link>
+            <span>|</span>
+            <Link to="/register-tpo" className="text-decoration-none mx-1 text-muted">
+              TPO Registration
+            </Link>
+          </div>
         </div>
       </div>
     </div>

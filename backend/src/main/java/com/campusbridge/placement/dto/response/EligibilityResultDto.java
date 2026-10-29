@@ -20,6 +20,8 @@ public class EligibilityResultDto {
 
     public boolean isEligible() { return eligible; }
     public void setEligible(boolean eligible) { this.eligible = eligible; }
+    public boolean getIsEligible() { return eligible; }
+
     public List<String> getReasons() { return reasons; }
     public void setReasons(List<String> reasons) { this.reasons = reasons; }
     public List<String> getMissingSkills() { return missingSkills; }

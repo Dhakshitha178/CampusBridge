@@ -13,6 +13,9 @@ public class AuthResponse {
     private String collegeName;
     private Long companyId;
     private String companyName;
+    private String approvalStatus = "APPROVED";
+    private Boolean emailVerified = true;
+    private String designation;
 
     public AuthResponse() {}
 
@@ -27,6 +30,22 @@ public class AuthResponse {
         this.collegeName = collegeName;
         this.companyId = companyId;
         this.companyName = companyName;
+    }
+
+    public AuthResponse(String token, Long userId, String email, String fullName, Role role, Long profileId, Long collegeId, String collegeName, Long companyId, String companyName, String approvalStatus, Boolean emailVerified, String designation) {
+        this.token = token;
+        this.userId = userId;
+        this.email = email;
+        this.fullName = fullName;
+        this.role = role;
+        this.profileId = profileId;
+        this.collegeId = collegeId;
+        this.collegeName = collegeName;
+        this.companyId = companyId;
+        this.companyName = companyName;
+        this.approvalStatus = approvalStatus;
+        this.emailVerified = emailVerified;
+        this.designation = designation;
     }
 
     public String getToken() { return token; }
@@ -49,4 +68,10 @@ public class AuthResponse {
     public void setCompanyId(Long companyId) { this.companyId = companyId; }
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public String getApprovalStatus() { return approvalStatus; }
+    public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
+    public String getDesignation() { return designation; }
+    public void setDesignation(String designation) { this.designation = designation; }
 }

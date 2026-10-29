@@ -45,3 +45,26 @@ export const resetPassword = async (token, newPassword) => {
   const response = await apiClient.post("/auth/reset-password", { token, newPassword });
   return response.data;
 };
+
+export const verifyEmail = async (email, code) => {
+  const response = await apiClient.post("/auth/verify-email", { email, code });
+  return response.data;
+};
+
+export const checkUserStatus = async (email) => {
+  const response = await apiClient.get(`/auth/status?email=${encodeURIComponent(email)}`);
+  return response.data;
+};
+
+export const getPendingUsers = async () => {
+  const response = await apiClient.get("/auth/pending-users");
+  return response.data;
+};
+
+export const approveUser = async (userId, email) => {
+  let url = "/auth/approve-user?";
+  if (userId) url += `userId=${userId}`;
+  else if (email) url += `email=${encodeURIComponent(email)}`;
+  const response = await apiClient.post(url);
+  return response.data;
+};

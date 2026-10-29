@@ -1,21 +1,41 @@
-import React, { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { loginUser } from "../../services/authService";
 import { AuthContext } from "../../context/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useContext(AuthContext);
+
+  // Default active role: check URL param or default to STUDENT
+  const roleParam = searchParams.get("role")?.toUpperCase();
+  const initialRole = ["STUDENT", "TPO", "RECRUITER"].includes(roleParam) ? roleParam : "STUDENT";
+
+  const [activeRole, setActiveRole] = useState(initialRole);
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (roleParam && ["STUDENT", "TPO", "RECRUITER"].includes(roleParam)) {
+      setActiveRole(roleParam);
+    }
+  }, [roleParam]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleRoleChange = (role) => {
+    setActiveRole(role);
+    setError("");
+  };
+
   const handleAuthSuccess = (authData) => {
     login(authData, authData.token);
+
     if (authData.role === "STUDENT") {
       navigate("/student/dashboard");
     } else if (authData.role === "TPO") {
@@ -31,91 +51,308 @@ const LoginPage = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       const res = await loginUser(form);
       if (res.success && res.data) {
+        // Enforce role consistency check if needed
+        if (res.data.role !== activeRole) {
+          // Warning if role mismatch, but proceed with correct role routing
+          console.warn(`User authenticated as ${res.data.role} while tab was ${activeRole}`);
+        }
         handleAuthSuccess(res.data);
       } else {
         setError(res.message || "Login failed");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid credentials. Please verify your email and password.");
+      setError(
+        err.response?.data?.message ||
+          "Invalid credentials. Please verify your email and password."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // Role metadata configurations
+  const roleConfig = {
+    STUDENT: {
+      title: "Student Portal",
+      subtitle: "Unified Virtual Placement Drive Ecosystem",
+      emailLabel: "Student Email Address",
+      placeholder: "student@cb.com",
+      icon: "bi-mortarboard-fill",
+      btnClass: "btn-primary",
+      btnStyle: { backgroundColor: "#0f4c81", borderColor: "#0f4c81" },
+      submitText: "Sign In as Student",
+      registerText: "New Student?",
+      registerAction: "Register here",
+      registerLink: "/register",
+    },
+    TPO: {
+      title: "TPO & Placement Cell",
+      subtitle: "Institutional Placement & Accreditation Portal",
+      emailLabel: "Official College Email ID",
+      placeholder: "tpo@college.edu",
+      icon: "bi-shield-lock-fill",
+      btnClass: "btn-info text-white",
+      btnStyle: { backgroundColor: "#0288d1", borderColor: "#0288d1" },
+      submitText: "Sign In as Placement Officer",
+      registerText: "Placement Coordinator?",
+      registerAction: "Register as TPO",
+      registerLink: "/register-tpo",
+    },
+    RECRUITER: {
+      title: "Company Recruiter Portal",
+      subtitle: "Corporate Talent Acquisition & Drive Management",
+      emailLabel: "Official Company Email ID",
+      placeholder: "recruiter@company.com",
+      icon: "bi-building-fill",
+      btnClass: "btn-warning text-dark",
+      btnStyle: { backgroundColor: "#f59e0b", borderColor: "#d97706" },
+      submitText: "Sign In as Recruiter",
+      registerText: "Corporate Partner?",
+      registerAction: "Register as Recruiter",
+      registerLink: "/register-recruiter",
+    },
+  };
+
+  const current = roleConfig[activeRole];
+
   return (
-    <div className="card shadow-lg border-0" style={{ maxWidth: "460px", width: "100%", borderRadius: "12px" }}>
-      <div className="card-header text-white text-center py-4" style={{ background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)", borderTopLeftRadius: "12px", borderTopRightRadius: "12px" }}>
-        <i className="bi bi-mortarboard-fill fs-1 text-info mb-2 d-block"></i>
-        <h3 className="fw-bold mb-1">CampusBridge</h3>
-        <p className="small mb-0 opacity-75">Unified Virtual Placement Drive Ecosystem</p>
-      </div>
+    <div
+      className="min-vh-100 d-flex align-items-center justify-content-center p-3"
+      style={{
+        background: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+      }}
+    >
+      <div
+        className="card shadow-lg border-0"
+        style={{ maxWidth: "480px", width: "100%", borderRadius: "14px" }}
+      >
+        {/* Header */}
+        <div
+          className="card-header text-white text-center py-4 position-relative"
+          style={{
+            background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
+            borderTopLeftRadius: "14px",
+            borderTopRightRadius: "14px",
+          }}
+        >
+          <i className={`bi ${current.icon} fs-1 text-info mb-2 d-block`}></i>
+          <h3 className="fw-bold mb-1">CampusBridge</h3>
+          <p className="small mb-0 opacity-75">{current.subtitle}</p>
+        </div>
 
-      <div className="card-body p-4">
-        {error && (
-          <div className="alert alert-danger py-2 small d-flex align-items-center gap-2" role="alert">
-            <i className="bi bi-exclamation-triangle-fill"></i>
-            <div>{error}</div>
-          </div>
-        )}
+        {/* 3 Role Selection Tabs */}
+        <div className="bg-light border-bottom px-3 pt-3">
+          <ul className="nav nav-pills nav-fill gap-1" role="tablist">
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`nav-link py-2 px-2 small fw-semibold d-flex flex-column align-items-center ${
+                  activeRole === "STUDENT" ? "active bg-primary text-white" : "text-muted"
+                }`}
+                onClick={() => handleRoleChange("STUDENT")}
+              >
+                <i className="bi bi-mortarboard-fill mb-1"></i>
+                <span>Student</span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`nav-link py-2 px-2 small fw-semibold d-flex flex-column align-items-center ${
+                  activeRole === "TPO" ? "active text-white" : "text-muted"
+                }`}
+                style={activeRole === "TPO" ? { backgroundColor: "#0288d1" } : {}}
+                onClick={() => handleRoleChange("TPO")}
+              >
+                <i className="bi bi-shield-lock-fill mb-1"></i>
+                <span>TPO / Cell</span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`nav-link py-2 px-2 small fw-semibold d-flex flex-column align-items-center ${
+                  activeRole === "RECRUITER" ? "active bg-warning text-dark fw-bold" : "text-muted"
+                }`}
+                onClick={() => handleRoleChange("RECRUITER")}
+              >
+                <i className="bi bi-building-fill mb-1"></i>
+                <span>Recruiter</span>
+              </button>
+            </li>
+          </ul>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label small fw-semibold">Email Address</label>
-            <div className="input-group">
-              <span className="input-group-text bg-light"><i className="bi bi-envelope"></i></span>
-              <input
-                type="email"
-                name="email"
-                className="form-control"
-                placeholder="name@college.ac.in"
-                value={form.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label small fw-semibold">Password</label>
-            <div className="input-group">
-              <span className="input-group-text bg-light"><i className="bi bi-lock"></i></span>
-              <input
-                type="password"
-                name="password"
-                className="form-control"
-                placeholder="Enter password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="text-end mb-3">
-            <Link to="/forgot-password" className="text-decoration-none small fw-semibold" style={{ color: "#0f4c81" }}>
-              Forgot Password?
+        {/* Card Body */}
+        <div className="card-body p-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="fw-bold mb-0 text-dark">{current.title}</h5>
+            <Link
+              to={current.registerLink}
+              className="badge text-decoration-none px-2 py-1 fw-semibold"
+              style={{
+                backgroundColor:
+                  activeRole === "RECRUITER"
+                    ? "#fffbeb"
+                    : activeRole === "TPO"
+                    ? "#e0f2fe"
+                    : "#e0e7ff",
+                color:
+                  activeRole === "RECRUITER"
+                    ? "#b45309"
+                    : activeRole === "TPO"
+                    ? "#0369a1"
+                    : "#3730a3",
+                border: "1px solid currentColor",
+              }}
+            >
+              <i className="bi bi-person-plus-fill me-1"></i>
+              Register
             </Link>
           </div>
 
-          <button
-            className="btn btn-primary w-100 py-2 fw-semibold mb-3"
-            type="submit"
-            disabled={loading}
-            style={{ backgroundColor: "#0f4c81", borderColor: "#0f4c81" }}
-          >
-            {loading ? (
-              <span><span className="spinner-border spinner-border-sm me-2"></span>Signing in...</span>
-            ) : (
-              "Sign In"
-            )}
-          </button>
-        </form>
+          {error && (
+            <div
+              className="alert alert-danger py-2 small d-flex align-items-center gap-2"
+              role="alert"
+            >
+              <i className="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+              <div>{error}</div>
+            </div>
+          )}
 
-        <div className="text-center mt-3 pt-2 text-muted small">
-          New Student? <Link to="/register" className="text-decoration-none fw-semibold">Register here</Link>
+          <form onSubmit={handleSubmit}>
+            {/* Email Field */}
+            <div className="mb-3">
+              <label className="form-label small fw-semibold">{current.emailLabel} *</label>
+              <div className="input-group">
+                <span className="input-group-text bg-light">
+                  <i className="bi bi-envelope"></i>
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  className="form-control"
+                  placeholder={current.placeholder}
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Field with Show/Hide Toggle */}
+            <div className="mb-3">
+              <label className="form-label small fw-semibold">Password *</label>
+              <div className="input-group">
+                <span className="input-group-text bg-light">
+                  <i className="bi bi-lock"></i>
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  className="form-control"
+                  placeholder="Enter your account password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  tabIndex="-1"
+                >
+                  <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot Password */}
+            <div className="text-end mb-3">
+              <Link
+                to="/forgot-password"
+                className="text-decoration-none small fw-semibold"
+                style={{ color: "#0f4c81" }}
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
+            {/* Sign In Button */}
+            <button
+              className={`btn ${current.btnClass} w-100 py-2 fw-semibold mb-3`}
+              type="submit"
+              disabled={loading}
+              style={current.btnStyle}
+            >
+              {loading ? (
+                <span>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Authenticating...
+                </span>
+              ) : (
+                <>
+                  <i className="bi bi-box-arrow-in-right me-2"></i>
+                  {current.submitText}
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Registration Link Box */}
+          <div className="p-3 rounded bg-light border text-center">
+            <span className="text-muted small me-2">{current.registerText}</span>
+            <Link
+              to={current.registerLink}
+              className="text-decoration-none fw-bold small text-primary"
+            >
+              {current.registerAction} &rarr;
+            </Link>
+          </div>
+
+          {/* Secondary links */}
+          <div className="text-center mt-3 pt-2 text-muted" style={{ fontSize: "0.8rem" }}>
+            <span>Other portals: </span>
+            {activeRole !== "STUDENT" && (
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
+                onClick={() => handleRoleChange("STUDENT")}
+              >
+                Student
+              </button>
+            )}
+            {activeRole !== "TPO" && (
+              <>
+                <span className="text-muted">|</span>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
+                  onClick={() => handleRoleChange("TPO")}
+                >
+                  TPO
+                </button>
+              </>
+            )}
+            {activeRole !== "RECRUITER" && (
+              <>
+                <span className="text-muted">|</span>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
+                  onClick={() => handleRoleChange("RECRUITER")}
+                >
+                  Recruiter
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

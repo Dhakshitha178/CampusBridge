@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface CollegeRepository extends JpaRepository<College, Long> {
     Optional<College> findByCode(String code);
     boolean existsByCode(String code);
+    Optional<College> findByName(String name);
+    boolean existsByName(String name);
 }

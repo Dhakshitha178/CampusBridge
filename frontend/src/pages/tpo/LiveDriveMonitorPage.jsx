@@ -33,8 +33,8 @@ const LiveDriveMonitorPage = () => {
 
   const filteredData = monitorData.filter(
     (item) =>
-      item.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.driveTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.companyName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.driveTitle || item.jobTitle || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -87,10 +87,16 @@ const LiveDriveMonitorPage = () => {
       ) : (
         <div className="row g-4">
           {filteredData.map((drive) => {
-            const total = drive.totalApplicants || 0;
+            const total = drive.totalApplicants !== undefined ? drive.totalApplicants : (drive.totalDriveApplicants || 0);
             const selected = drive.selectedCount || 0;
-            const inProgress = drive.inProgressCount || 0;
+            const inProgress = drive.inProgressCount !== undefined ? drive.inProgressCount : Math.max(0, total - selected - (drive.rejectedCount || 0));
             const rejected = drive.rejectedCount || 0;
+            const title = drive.driveTitle || drive.jobTitle || "Campus Recruitment Drive";
+            const pkg = drive.salaryPackage || drive.packageLpa || "Competitive";
+            const mode = drive.workMode || "ON_SITE";
+            const vacancies = drive.vacancies || 0;
+            const status = drive.driveStatus || drive.stageStatus || "ACTIVE";
+            const activeRound = drive.currentActiveStage || drive.currentStage || "Round 1 Active";
 
             const selectedPct = total > 0 ? ((selected / total) * 100).toFixed(1) : 0;
             const inProgressPct = total > 0 ? ((inProgress / total) * 100).toFixed(1) : 0;
@@ -110,19 +116,19 @@ const LiveDriveMonitorPage = () => {
                             Drive ID: #{drive.driveId}
                           </span>
                           <span className="badge bg-success-subtle text-success">
-                            {drive.driveStatus}
+                            {status}
                           </span>
                         </div>
-                        <h4 className="fw-bold text-dark mb-0">{drive.driveTitle}</h4>
+                        <h4 className="fw-bold text-dark mb-0">{title}</h4>
                         <div className="text-muted small">
-                          Package: <strong>{drive.salaryPackage} LPA</strong> &bull; Mode: {drive.workMode} &bull; Vacancies: {drive.vacancies}
+                          Package: <strong>{pkg} LPA</strong> &bull; Mode: {mode} &bull; Vacancies: {vacancies}
                         </div>
                       </div>
 
                       <div className="text-end">
                         <div className="small text-muted">Active Current Round:</div>
                         <span className="badge bg-primary fs-6 px-3 py-2 mt-1">
-                          {drive.currentActiveStage || "Awaiting Scheduling"}
+                          {activeRound}
                         </span>
                       </div>
                     </div>

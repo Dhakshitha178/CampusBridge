@@ -20,8 +20,8 @@ export const getStudentApplications = async () => {
   return response.data;
 };
 
-export const applyToDrive = async (driveId) => {
-  const response = await apiClient.post(`/student/applications/${driveId}/apply`);
+export const applyToDrive = async (driveId, notes = "") => {
+  const response = await apiClient.post(`/student/applications/${driveId}/apply`, { driveId, notes });
   return response.data;
 };
 

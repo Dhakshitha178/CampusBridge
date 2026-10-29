@@ -28,13 +28,24 @@ public class EligibilityCheckService {
 
         // 1. Department Check
         if (criteria.getAllowedDepartments() != null && !criteria.getAllowedDepartments().trim().isEmpty()) {
-            Set<String> allowedDepts = Arrays.stream(criteria.getAllowedDepartments().split(","))
+            Set<String> allowedDeptsRaw = Arrays.stream(criteria.getAllowedDepartments().split(","))
                     .map(String::trim)
                     .map(String::toUpperCase)
                     .collect(Collectors.toSet());
 
-            String studentDept = student.getDepartment() != null ? student.getDepartment().trim().toUpperCase() : "";
-            if (!allowedDepts.contains(studentDept)) {
+            Set<String> allowedDeptsNorm = allowedDeptsRaw.stream()
+                    .map(this::normalizeDept)
+                    .collect(Collectors.toSet());
+
+            String studentDeptRaw = student.getDepartment() != null ? student.getDepartment().trim().toUpperCase() : "";
+            String studentDeptNorm = normalizeDept(student.getDepartment());
+
+            boolean matchesDept = allowedDeptsRaw.contains(studentDeptRaw)
+                    || allowedDeptsNorm.contains(studentDeptNorm)
+                    || allowedDeptsRaw.contains(studentDeptNorm)
+                    || allowedDeptsNorm.contains(studentDeptRaw);
+
+            if (!matchesDept) {
                 isEligible = false;
                 ineligibilityReasons.add(String.format("Department '%s' is not in eligible list [%s]",
                         student.getDepartment(), criteria.getAllowedDepartments()));
@@ -84,14 +95,18 @@ public class EligibilityCheckService {
 
             Set<String> studentSkillSet = new HashSet<>();
             if (student.getSkills() != null) {
-                Arrays.stream(student.getSkills().split(","))
+                Arrays.stream(student.getSkills().split("[,;|]"))
                         .map(String::trim)
                         .map(String::toLowerCase)
+                        .filter(s -> !s.isEmpty())
                         .forEach(studentSkillSet::add);
             }
 
             for (String req : requiredList) {
-                if (studentSkillSet.contains(req.toLowerCase())) {
+                String reqLower = req.toLowerCase();
+                boolean matched = studentSkillSet.contains(reqLower)
+                        || studentSkillSet.stream().anyMatch(s -> s.contains(reqLower) || reqLower.contains(s));
+                if (matched) {
                     matchedSkills.add(req);
                 } else {
                     missingSkills.add(req);
@@ -116,5 +131,21 @@ public class EligibilityCheckService {
         }
 
         return result;
+    }
+
+    private String normalizeDept(String dept) {
+        if (dept == null) return "";
+        String clean = dept.toUpperCase()
+                .replace("&", "AND")
+                .replaceAll("[^A-Z0-9 ]", "")
+                .trim();
+        if (clean.equals("CSE") || clean.contains("COMPUTER SCIENCE")) return "CSE";
+        if (clean.equals("IT") || clean.contains("INFORMATION TECH")) return "IT";
+        if (clean.equals("ECE") || (clean.contains("ELECTRONIC") && clean.contains("COMMUNICATION"))) return "ECE";
+        if (clean.equals("EEE") || (clean.contains("ELECTRICAL") && clean.contains("ELECTRONIC"))) return "EEE";
+        if (clean.equals("MECH") || clean.contains("MECHANICAL")) return "MECH";
+        if (clean.equals("AIDS") || clean.equals("AI") || clean.contains("ARTIFICIAL INTEL")) return "AIDS";
+        if (clean.equals("CIVIL") || clean.contains("CIVIL")) return "CIVIL";
+        return clean;
     }
 }

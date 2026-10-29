@@ -35,8 +35,12 @@ CREATE TABLE IF NOT EXISTS users (
     role ENUM('STUDENT', 'TPO', 'RECRUITER') NOT NULL,
     full_name VARCHAR(150) NOT NULL,
     phone_number VARCHAR(20),
+    designation VARCHAR(150),
     college_id BIGINT,
     is_active BOOLEAN DEFAULT TRUE,
+    approval_status VARCHAR(50) DEFAULT 'APPROVED',
+    is_email_verified BOOLEAN DEFAULT TRUE,
+    verification_code VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_users_college FOREIGN KEY (college_id) REFERENCES colleges(id) ON DELETE SET NULL

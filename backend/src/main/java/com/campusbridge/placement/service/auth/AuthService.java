@@ -55,7 +55,14 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new RuntimeException("Email address is required");
+        }
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new RuntimeException("Password is required");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -66,6 +73,10 @@ public class AuthService {
             throw new RuntimeException("Account is deactivated");
         }
 
+        return loginUserDirect(user);
+    }
+
+    public AuthResponse loginUserDirect(User user) {
         Long profileId = null;
         Long entityRefId = null;
         Long companyId = null;
@@ -103,16 +114,31 @@ public class AuthService {
                 collegeId,
                 collegeName,
                 companyId,
-                companyName
+                companyName,
+                user.getApprovalStatus(),
+                user.getEmailVerified(),
+                user.getDesignation()
         );
     }
 
     @Transactional
     public StudentResponse registerStudent(StudentRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (request.getEmail() == null || !request.getEmail().contains("@")) {
+            throw new RuntimeException("A valid email address is required.");
+        }
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name is required.");
+        }
+        if (request.getRollNumber() == null || request.getRollNumber().trim().isEmpty()) {
+            throw new RuntimeException("Roll / Register number is required.");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long.");
+        }
+        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
             throw new RuntimeException("Email already registered: " + request.getEmail());
         }
-        if (studentRepository.existsByRollNumber(request.getRollNumber())) {
+        if (studentRepository.existsByRollNumber(request.getRollNumber().trim())) {
             throw new RuntimeException("Roll number already registered: " + request.getRollNumber());
         }
 
@@ -125,18 +151,21 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.STUDENT);
-        user.setFullName(request.getFullName());
+        user.setFullName(request.getFullName().trim());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setCollege(college);
+        user.setActive(true);
+        user.setApprovalStatus("APPROVED");
+        user.setEmailVerified(true);
         User savedUser = userRepository.save(user);
 
         Student student = new Student();
         student.setUser(savedUser);
         student.setCollege(college);
-        student.setRollNumber(request.getRollNumber());
+        student.setRollNumber(request.getRollNumber().trim());
         student.setDepartment(request.getDepartment() != null ? request.getDepartment() : "CSE");
         student.setAcademicYear(request.getAcademicYear() != null ? request.getAcademicYear() : "3rd Year");
         student.setGraduationYear(request.getGraduationYear() != null ? request.getGraduationYear() : 2026);
@@ -151,7 +180,16 @@ public class AuthService {
 
     @Transactional
     public AuthResponse registerRecruiter(RecruiterRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (request.getEmail() == null || !request.getEmail().contains("@")) {
+            throw new RuntimeException("A valid official company email address is required.");
+        }
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Authorized representative full name is required.");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long.");
+        }
+        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
             throw new RuntimeException("Email already registered: " + request.getEmail());
         }
 
@@ -159,31 +197,52 @@ public class AuthService {
         if (request.getCompanyId() != null) {
             company = companyRepository.findById(request.getCompanyId()).orElse(null);
         }
-        if (company == null && request.getCompanyName() != null) {
-            company = new Company();
-            company.setName(request.getCompanyName());
-            company.setIndustry(request.getCompanyIndustry() != null ? request.getCompanyIndustry() : "Technology");
-            company.setWebsite(request.getCompanyWebsite());
-            company.setVerified(true);
-            company = companyRepository.save(company);
+        if (company == null && request.getCompanyName() != null && !request.getCompanyName().trim().isEmpty()) {
+            String cName = request.getCompanyName().trim();
+            company = companyRepository.findByName(cName).orElse(null);
+            if (company == null) {
+                company = new Company();
+                company.setName(cName);
+                company.setIndustry(request.getCompanyIndustry() != null && !request.getCompanyIndustry().isBlank()
+                        ? request.getCompanyIndustry()
+                        : "Technology & Software");
+                company.setWebsite(request.getCompanyWebsite());
+                company.setVerified(true);
+                company = companyRepository.save(company);
+            }
         }
         if (company == null) {
-            company = companyRepository.findAll().stream().findFirst().orElseThrow(() -> new RuntimeException("Company required"));
+            throw new RuntimeException("Company selection or corporate name is required.");
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.RECRUITER);
-        user.setFullName(request.getFullName());
+        user.setFullName(request.getFullName().trim());
         user.setPhoneNumber(request.getPhoneNumber());
+        user.setDesignation(request.getDesignation() != null && !request.getDesignation().isBlank()
+                ? request.getDesignation().trim()
+                : "HR Talent Acquisition Manager");
+        user.setActive(true);
+        user.setApprovalStatus("APPROVED");
+        user.setEmailVerified(true);
         User savedUser = userRepository.save(user);
 
         Recruiter recruiter = new Recruiter();
         recruiter.setUser(savedUser);
         recruiter.setCompany(company);
-        recruiter.setDesignation(request.getDesignation() != null ? request.getDesignation() : "Talent Acquisition Specialist");
+        recruiter.setDesignation(user.getDesignation());
         Recruiter savedRecruiter = recruiterRepository.save(recruiter);
+
+        // Send welcome email
+        String subject = "CampusBridge - Welcome to Corporate Recruitment Portal";
+        String body = String.format(
+                "Dear %s,\n\nWelcome to CampusBridge! Your recruiter account for %s is now active and ready to use.\n\n" +
+                "You can now create placement drives, schedule interviews, evaluate candidates, and manage offers.\n\n" +
+                "Best regards,\nCampusBridge Placement Cell",
+                savedUser.getFullName(), company.getName());
+        emailUtil.sendEmail(savedUser.getEmail(), subject, body);
 
         String token = jwtUtil.generateToken(savedUser, savedRecruiter.getId(), company.getId());
 
@@ -197,13 +256,25 @@ public class AuthService {
                 null,
                 null,
                 company.getId(),
-                company.getName()
+                company.getName(),
+                savedUser.getApprovalStatus(),
+                savedUser.getEmailVerified(),
+                savedUser.getDesignation()
         );
     }
 
     @Transactional
     public AuthResponse registerTpo(TpoRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (request.getEmail() == null || !request.getEmail().contains("@")) {
+            throw new RuntimeException("A valid official college email address is required.");
+        }
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Placement officer full name is required.");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long.");
+        }
+        if (userRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
             throw new RuntimeException("Email already registered: " + request.getEmail());
         }
 
@@ -211,23 +282,50 @@ public class AuthService {
         if (request.getCollegeId() != null) {
             college = collegeRepository.findById(request.getCollegeId()).orElse(null);
         }
+        if (college == null && request.getCollegeName() != null && !request.getCollegeName().trim().isEmpty()) {
+            String colName = request.getCollegeName().trim();
+            college = collegeRepository.findByName(colName).orElse(null);
+            if (college == null) {
+                college = new College();
+                college.setName(colName);
+                String code = request.getCollegeCode() != null && !request.getCollegeCode().isBlank()
+                        ? request.getCollegeCode().trim().toUpperCase()
+                        : "COL-" + (System.currentTimeMillis() % 100000);
+                college.setCode(code);
+                college.setCity("Coimbatore");
+                college.setState("Tamil Nadu");
+                college = collegeRepository.save(college);
+            }
+        }
         if (college == null) {
-            college = collegeRepository.findAll().stream().findFirst().orElse(null);
+            college = collegeRepository.findAll().stream().findFirst().orElseThrow(() -> new RuntimeException("Institution selection or college name required."));
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.TPO);
-        user.setFullName(request.getFullName());
+        user.setFullName(request.getFullName().trim());
         user.setPhoneNumber(request.getPhoneNumber());
+        user.setDesignation(request.getDesignation() != null && !request.getDesignation().isBlank()
+                ? request.getDesignation().trim()
+                : "Training & Placement Officer");
         user.setCollege(college);
+        user.setActive(true);
+        user.setApprovalStatus("APPROVED");
+        user.setEmailVerified(true);
         User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(savedUser, null, null);
+        // Send welcome email
+        String subject = "CampusBridge - Welcome to TPO Portal";
+        String body = String.format(
+                "Dear %s,\n\nWelcome to CampusBridge! Your TPO account for %s is now active and ready to use.\n\n" +
+                "You can now access your college placement dashboard, manage drives, and monitor student placements.\n\n" +
+                "Best regards,\nCampusBridge Administration",
+                savedUser.getFullName(), college.getName());
+        emailUtil.sendEmail(savedUser.getEmail(), subject, body);
 
-        Long cId = savedUser.getCollege() != null ? savedUser.getCollege().getId() : null;
-        String cName = savedUser.getCollege() != null ? savedUser.getCollege().getName() : null;
+        String token = jwtUtil.generateToken(savedUser, null, null);
 
         return new AuthResponse(
                 token,
@@ -236,11 +334,76 @@ public class AuthService {
                 savedUser.getFullName(),
                 Role.TPO,
                 null,
-                cId,
-                cName,
+                college.getId(),
+                college.getName(),
                 null,
-                null
+                null,
+                savedUser.getApprovalStatus(),
+                savedUser.getEmailVerified(),
+                savedUser.getDesignation()
         );
+    }
+
+    @Transactional
+    public AuthResponse verifyEmail(String email, String code) {
+        if (email == null || code == null) {
+            throw new RuntimeException("Email and verification code are required.");
+        }
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new RuntimeException("Account not found with email: " + email));
+
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(code.trim())) {
+            throw new RuntimeException("Invalid verification code. Please check your email or server log.");
+        }
+
+        user.setEmailVerified(true);
+        user.setApprovalStatus("APPROVED");
+        user.setVerificationCode(null);
+        User saved = userRepository.save(user);
+
+        if (saved.getRole() == Role.RECRUITER) {
+            recruiterRepository.findByUserId(saved.getId()).ifPresent(r -> {
+                if (r.getCompany() != null && !Boolean.TRUE.equals(r.getCompany().getVerified())) {
+                    r.getCompany().setVerified(true);
+                    companyRepository.save(r.getCompany());
+                }
+            });
+        }
+
+        return loginUserDirect(saved);
+    }
+
+    @Transactional
+    public AuthResponse approveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        user.setApprovalStatus("APPROVED");
+        user.setEmailVerified(true);
+        user.setActive(true);
+        User saved = userRepository.save(user);
+
+        if (saved.getRole() == Role.RECRUITER) {
+            recruiterRepository.findByUserId(saved.getId()).ifPresent(r -> {
+                if (r.getCompany() != null && !Boolean.TRUE.equals(r.getCompany().getVerified())) {
+                    r.getCompany().setVerified(true);
+                    companyRepository.save(r.getCompany());
+                }
+            });
+        }
+
+        return loginUserDirect(saved);
+    }
+
+    public AuthResponse getUserStatus(String email) {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        return loginUserDirect(user);
+    }
+
+    public java.util.List<User> getPendingUsers() {
+        return userRepository.findAll().stream()
+                .filter(u -> "PENDING_APPROVAL".equalsIgnoreCase(u.getApprovalStatus()))
+                .toList();
     }
 
     @Transactional

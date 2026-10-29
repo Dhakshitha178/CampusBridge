@@ -19,7 +19,7 @@ function App() {
           </main>
         </div>
       ) : (
-        <main className="flex-grow-1 d-flex align-items-center justify-content-center p-4 bg-light">
+        <main className="flex-grow-1 d-flex flex-column align-items-center justify-content-center py-4 px-3 bg-light">
           <AppRoutes />
         </main>
       )}

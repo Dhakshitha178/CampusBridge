@@ -55,9 +55,7 @@ const LoginPage = () => {
     try {
       const res = await loginUser(form);
       if (res.success && res.data) {
-        // Enforce role consistency check if needed
         if (res.data.role !== activeRole) {
-          // Warning if role mismatch, but proceed with correct role routing
           console.warn(`User authenticated as ${res.data.role} while tab was ${activeRole}`);
         }
         handleAuthSuccess(res.data);
@@ -69,6 +67,25 @@ const LoginPage = () => {
         err.response?.data?.message ||
           "Invalid credentials. Please verify your email and password."
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickLogin = async (email, password, role) => {
+    setError("");
+    setLoading(true);
+    if (role) setActiveRole(role);
+    setForm({ email, password });
+    try {
+      const res = await loginUser({ email, password });
+      if (res.success && res.data) {
+        handleAuthSuccess(res.data);
+      } else {
+        setError(res.message || "Quick demo login failed.");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Quick demo login failed.");
     } finally {
       setLoading(false);
     }
@@ -120,15 +137,10 @@ const LoginPage = () => {
   const current = roleConfig[activeRole];
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center p-3"
-      style={{
-        background: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
-      }}
-    >
+    <div className="w-100 my-auto py-2 d-flex justify-content-center">
       <div
         className="card shadow-lg border-0"
-        style={{ maxWidth: "480px", width: "100%", borderRadius: "14px" }}
+        style={{ maxWidth: "490px", width: "100%", borderRadius: "14px" }}
       >
         {/* Header */}
         <div
@@ -306,7 +318,7 @@ const LoginPage = () => {
           </form>
 
           {/* Registration Link Box */}
-          <div className="p-3 rounded bg-light border text-center">
+          <div className="p-3 rounded bg-light border text-center mb-3">
             <span className="text-muted small me-2">{current.registerText}</span>
             <Link
               to={current.registerLink}
@@ -316,42 +328,104 @@ const LoginPage = () => {
             </Link>
           </div>
 
-          {/* Secondary links */}
-          <div className="text-center mt-3 pt-2 text-muted" style={{ fontSize: "0.8rem" }}>
-            <span>Other portals: </span>
-            {activeRole !== "STUDENT" && (
+          {/* Evaluator Demo Shortcuts */}
+          <div className="pt-2 border-top">
+            <div
+              className="small text-muted fw-bold text-uppercase mb-2 text-center"
+              style={{ fontSize: "0.72rem", letterSpacing: "0.5px" }}
+            >
+              Demo Quick Logins (Evaluator Shortcuts)
+            </div>
+            <div className="d-grid gap-2">
               <button
                 type="button"
-                className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
-                onClick={() => handleRoleChange("STUDENT")}
+                className={`btn btn-sm text-start d-flex justify-content-between align-items-center ${
+                  activeRole === "STUDENT"
+                    ? "btn-success"
+                    : "btn-outline-success"
+                }`}
+                onClick={() => handleQuickLogin("student@cb.com", "student28", "STUDENT")}
+                disabled={loading}
               >
-                Student
+                <span>
+                  <i className="bi bi-mortarboard-fill me-1"></i> Demo Student
+                </span>
+                <span className={`badge ${activeRole === "STUDENT" ? "bg-light text-success" : "bg-success"}`}>
+                  student@cb.com
+                </span>
               </button>
-            )}
-            {activeRole !== "TPO" && (
-              <>
-                <span className="text-muted">|</span>
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
-                  onClick={() => handleRoleChange("TPO")}
-                >
-                  TPO
-                </button>
-              </>
-            )}
-            {activeRole !== "RECRUITER" && (
-              <>
-                <span className="text-muted">|</span>
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm p-0 text-decoration-none mx-1"
-                  onClick={() => handleRoleChange("RECRUITER")}
-                >
-                  Recruiter
-                </button>
-              </>
-            )}
+              <button
+                type="button"
+                className={`btn btn-sm text-start d-flex justify-content-between align-items-center ${
+                  activeRole === "TPO"
+                    ? "btn-primary"
+                    : "btn-outline-primary"
+                }`}
+                onClick={() => handleQuickLogin("tpo@cb.com", "tpo28", "TPO")}
+                disabled={loading}
+              >
+                <span>
+                  <i className="bi bi-shield-lock-fill me-1"></i> Demo TPO Officer
+                </span>
+                <span className={`badge ${activeRole === "TPO" ? "bg-light text-primary" : "bg-primary"}`}>
+                  tpo@cb.com
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm text-start d-flex justify-content-between align-items-center ${
+                  activeRole === "RECRUITER"
+                    ? "btn-warning text-dark fw-semibold"
+                    : "btn-outline-warning text-dark"
+                }`}
+                onClick={() => handleQuickLogin("recruiter@cb.com", "rec28", "RECRUITER")}
+                disabled={loading}
+              >
+                <span>
+                  <i className="bi bi-building me-1"></i> Demo Recruiter
+                </span>
+                <span className={`badge ${activeRole === "RECRUITER" ? "bg-dark text-warning" : "bg-warning text-dark"}`}>
+                  recruiter@cb.com
+                </span>
+              </button>
+            </div>
+
+            {/* Additional test accounts */}
+            <div className="text-center text-muted my-2" style={{ fontSize: "0.68rem" }}>
+              ── legacy test accounts ──
+            </div>
+            <div className="d-grid gap-1">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
+                style={{ fontSize: "0.78rem" }}
+                onClick={() => handleQuickLogin("arun.prakash@college.ac.in", "student123", "STUDENT")}
+                disabled={loading}
+              >
+                <span><i className="bi bi-person me-1"></i> Student: Arun Prakash</span>
+                <span className="badge bg-secondary">Login as Student</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
+                style={{ fontSize: "0.78rem" }}
+                onClick={() => handleQuickLogin("rangarajan@college.ac.in", "tpo123", "TPO")}
+                disabled={loading}
+              >
+                <span><i className="bi bi-shield me-1"></i> TPO: Dr. K. Rangarajan</span>
+                <span className="badge bg-secondary">Login as TPO</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
+                style={{ fontSize: "0.78rem" }}
+                onClick={() => handleQuickLogin("recruiter@zoho.com", "recruiter123", "RECRUITER")}
+                disabled={loading}
+              >
+                <span><i className="bi bi-briefcase me-1"></i> Recruiter: Zoho Corp</span>
+                <span className="badge bg-secondary">Login as Recruiter</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

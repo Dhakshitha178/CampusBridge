@@ -47,6 +47,10 @@ public class InterviewPanel {
     public void setCompany(Company company) { this.company = company; }
     public String getPanelName() { return panelName; }
     public void setPanelName(String panelName) { this.panelName = panelName; }
+    public String getName() { return panelName; }
+    public void setName(String name) { this.panelName = name; }
+    public boolean isActive() { return true; }
+    public void setActive(boolean active) {}
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public List<Interviewer> getMembers() { return members; }

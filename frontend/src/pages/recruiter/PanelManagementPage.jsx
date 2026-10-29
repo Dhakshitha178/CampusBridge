@@ -270,10 +270,10 @@ const PanelManagementPage = () => {
                 <div className="list-group list-group-flush">
                   {panels.map((p) => (
                     <div key={p.id} className="list-group-item p-3">
-                      <div className="fw-bold text-dark">{p.name}</div>
+                      <div className="fw-bold text-dark">{p.panelName || p.name}</div>
                       <p className="text-secondary small mb-1">{p.description || "General evaluation panel."}</p>
                       <span className="badge bg-success-subtle text-success">
-                        {p.active ? "Ready for Rounds" : "Inactive"}
+                        {p.active !== false ? "Ready for Rounds" : "Inactive"}
                       </span>
                     </div>
                   ))}

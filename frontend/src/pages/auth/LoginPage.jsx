@@ -399,7 +399,7 @@ const LoginPage = () => {
                 type="button"
                 className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
                 style={{ fontSize: "0.78rem" }}
-                onClick={() => handleQuickLogin("arun.prakash@college.ac.in", "student123", "STUDENT")}
+                onClick={() => handleQuickLogin("arun.student@gct.ac.in", "Student@123", "STUDENT")}
                 disabled={loading}
               >
                 <span><i className="bi bi-person me-1"></i> Student: Arun Prakash</span>
@@ -409,7 +409,7 @@ const LoginPage = () => {
                 type="button"
                 className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
                 style={{ fontSize: "0.78rem" }}
-                onClick={() => handleQuickLogin("rangarajan@college.ac.in", "tpo123", "TPO")}
+                onClick={() => handleQuickLogin("tpo@gct.ac.in", "Tpo@123", "TPO")}
                 disabled={loading}
               >
                 <span><i className="bi bi-shield me-1"></i> TPO: Dr. K. Rangarajan</span>
@@ -419,7 +419,7 @@ const LoginPage = () => {
                 type="button"
                 className="btn btn-outline-secondary btn-sm py-1 text-start d-flex justify-content-between align-items-center"
                 style={{ fontSize: "0.78rem" }}
-                onClick={() => handleQuickLogin("recruiter@zoho.com", "recruiter123", "RECRUITER")}
+                onClick={() => handleQuickLogin("recruiter.zoho@zoho.com", "Zoho@123", "RECRUITER")}
                 disabled={loading}
               >
                 <span><i className="bi bi-briefcase me-1"></i> Recruiter: Zoho Corp</span>

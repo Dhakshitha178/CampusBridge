@@ -131,12 +131,25 @@ public class RecruiterController {
 
     @PostMapping("/panels")
     public ResponseEntity<ApiResponse<InterviewPanel>> createMyPanel(
-            @RequestParam String panelName,
-            @RequestParam(required = false) String description,
-            @RequestBody(required = false) List<Long> interviewerIds) {
+            @RequestBody(required = false) CreatePanelRequest request,
+            @RequestParam(required = false) String panelName,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description) {
         Recruiter recruiter = getCurrentRecruiter();
+        String effectivePanelName = request != null && request.getPanelName() != null && !request.getPanelName().trim().isEmpty()
+                ? request.getPanelName()
+                : (panelName != null && !panelName.trim().isEmpty() ? panelName : name);
+        String effectiveDescription = request != null && request.getDescription() != null
+                ? request.getDescription()
+                : description;
+        List<Long> interviewerIds = request != null ? request.getInterviewerIds() : null;
+
+        if (effectivePanelName == null || effectivePanelName.trim().isEmpty()) {
+            throw new RuntimeException("Panel title/name is required");
+        }
+
         return ResponseEntity.ok(ApiResponse.ok("Panel created",
-                companyService.createPanel(recruiter.getCompany().getId(), panelName, description, interviewerIds)));
+                companyService.createPanel(recruiter.getCompany().getId(), effectivePanelName, effectiveDescription, interviewerIds)));
     }
 
     @GetMapping("/offers")
@@ -298,11 +311,24 @@ public class RecruiterController {
     @PostMapping("/{companyId}/panels")
     public ResponseEntity<ApiResponse<InterviewPanel>> createPanel(
             @PathVariable Long companyId,
-            @RequestParam String panelName,
-            @RequestParam(required = false) String description,
-            @RequestBody(required = false) List<Long> interviewerIds) {
+            @RequestBody(required = false) CreatePanelRequest request,
+            @RequestParam(required = false) String panelName,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description) {
+        String effectivePanelName = request != null && request.getPanelName() != null && !request.getPanelName().trim().isEmpty()
+                ? request.getPanelName()
+                : (panelName != null && !panelName.trim().isEmpty() ? panelName : name);
+        String effectiveDescription = request != null && request.getDescription() != null
+                ? request.getDescription()
+                : description;
+        List<Long> interviewerIds = request != null ? request.getInterviewerIds() : null;
+
+        if (effectivePanelName == null || effectivePanelName.trim().isEmpty()) {
+            throw new RuntimeException("Panel title/name is required");
+        }
+
         return ResponseEntity.ok(ApiResponse.ok("Panel created",
-                companyService.createPanel(companyId, panelName, description, interviewerIds)));
+                companyService.createPanel(companyId, effectivePanelName, effectiveDescription, interviewerIds)));
     }
 
     @PostMapping("/offers")

@@ -147,7 +147,13 @@ export const getPanels = async () => {
 };
 
 export const createPanel = async (panelData) => {
-  const response = await apiClient.post("/recruiter/panels", panelData);
+  const payload = {
+    name: panelData.name || panelData.panelName,
+    panelName: panelData.panelName || panelData.name,
+    description: panelData.description || "",
+    interviewerIds: panelData.interviewerIds || [],
+  };
+  const response = await apiClient.post("/recruiter/panels", payload);
   return response.data;
 };
 

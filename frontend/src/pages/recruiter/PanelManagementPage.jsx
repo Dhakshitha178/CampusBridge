@@ -24,6 +24,7 @@ const PanelManagementPage = () => {
 
   const [panelForm, setPanelForm] = useState({
     name: "Core Technical Panel 1",
+    panelName: "Core Technical Panel 1",
     description: "Evaluates algorithms, data structures, and back-end design",
   });
 
@@ -87,7 +88,7 @@ const PanelManagementPage = () => {
       const res = await createPanel(panelForm);
       if (res.success) {
         setMsg({ text: "Evaluation panel created successfully!", type: "success" });
-        setPanelForm({ name: "", description: "" });
+        setPanelForm({ name: "", panelName: "", description: "" });
         loadData();
       } else {
         setMsg({ text: res.message || "Failed to create panel.", type: "danger" });
@@ -234,7 +235,7 @@ const PanelManagementPage = () => {
                     className="form-control form-control-sm"
                     placeholder="e.g. Backend Engineering Panel A"
                     value={panelForm.name}
-                    onChange={(e) => setPanelForm({ ...panelForm, name: e.target.value })}
+                    onChange={(e) => setPanelForm({ ...panelForm, name: e.target.value, panelName: e.target.value })}
                     required
                   />
                 </div>

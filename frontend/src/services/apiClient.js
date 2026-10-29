@@ -1,9 +1,10 @@
 import axios from "axios";
 
+export const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
+
 // Central axios instance for all backend calls.
-// Change baseURL if your Spring Boot server runs on a different port.
 const apiClient = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

@@ -82,6 +82,7 @@ playwright-report/
 *.db
 *.sql.bak
 *.dump
+database/backups/
 
 # ---------- Generated frontend output ----------
 # Keep source code and package-lock.json tracked.

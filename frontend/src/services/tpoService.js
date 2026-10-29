@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient, { API_BASE_URL } from "./apiClient";
 
 export const getTpoDashboard = async () => {
   const response = await apiClient.get("/tpo/dashboard-stats");
@@ -99,7 +99,7 @@ export const generateWeeklyReport = async () => {
 
 export const downloadReportPdf = async (reportId) => {
   const token = localStorage.getItem("cb_token");
-  const response = await fetch(`http://localhost:8080/api/tpo/reports/${reportId}/pdf`, {
+  const response = await fetch(`${API_BASE_URL}/tpo/reports/${reportId}/pdf`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -117,7 +117,7 @@ export const downloadReportPdf = async (reportId) => {
 
 export const exportPlacementExcel = async () => {
   const token = localStorage.getItem("cb_token");
-  const response = await fetch(`http://localhost:8080/api/tpo/reports/export/excel`, {
+  const response = await fetch(`${API_BASE_URL}/tpo/reports/export/excel`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

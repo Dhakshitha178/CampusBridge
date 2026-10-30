@@ -2,18 +2,13 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerTpo, getColleges } from "../../services/authService";
 import { AuthContext } from "../../context/AuthContext";
-
-const DEFAULT_COLLEGES = [
-  { id: 1, name: "Government College of Technology", code: "GCT-CBE", city: "Coimbatore", state: "Tamil Nadu" },
-  { id: 2, name: "PSG College of Technology", code: "PSG-CBE", city: "Coimbatore", state: "Tamil Nadu" },
-  { id: 40, name: "Bannari Amman Institute of Technology", code: "BIT-SAT", city: "Sathyamangalam", state: "Tamil Nadu" },
-];
+import { mergeColleges } from "../../constants/colleges";
 
 const TpoRegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const [colleges, setColleges] = useState(DEFAULT_COLLEGES);
+  const [colleges, setColleges] = useState(mergeColleges());
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -37,22 +32,7 @@ const TpoRegisterPage = () => {
     getColleges()
       .then((res) => {
         if (res.success && res.data && res.data.length > 0) {
-          const list = [...res.data];
-          const hasBit = list.some(
-            (c) =>
-              (c.name && c.name.toLowerCase().includes("bannari amman")) ||
-              (c.code && c.code.toUpperCase().includes("BIT"))
-          );
-          if (!hasBit) {
-            list.push({
-              id: 40,
-              name: "Bannari Amman Institute of Technology",
-              code: "BIT-SAT",
-              city: "Sathyamangalam",
-              state: "Tamil Nadu",
-            });
-          }
-          setColleges(list);
+          setColleges(mergeColleges(res.data));
         }
       })
       .catch((err) => {

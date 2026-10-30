@@ -82,13 +82,15 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // Ensure Bannari Amman Institute of Technology is always seeded without duplicates
-        College bit = getOrSaveCollege("Bannari Amman Institute of Technology", "BIT-SAT", "Sathyamangalam", "Tamil Nadu", "placement@bitsathy.ac.in", "+91 4295 226000");
-        ensureDepartments(bit);
+        // Ensure all Coimbatore, Erode, and Chennai colleges (including BIT) are seeded with departments
+        ensureAllRegionalColleges();
+        College bit = collegeRepository.findByCode("BIT-SAT").orElseGet(() ->
+            getOrSaveCollege("Bannari Amman Institute of Technology", "BIT-SAT", "Sathyamangalam", "Tamil Nadu", "placement@bitsathy.ac.in", "+91 4295 226000")
+        );
         getOrSaveUser("tpo@bitsathy.ac.in", "Tpo@2025", Role.TPO, "Dr. S. BIT Placement Officer", "+91 9842200029", bit);
 
         // Idempotent guard: skip if already fully seeded with all required data
-        if (collegeRepository.count() >= 21 && userRepository.existsByEmail("student@cb.com")) {
+        if (collegeRepository.count() >= 59 && userRepository.existsByEmail("student@cb.com")) {
             if (companyHistoryRepository.findByCollegeId(bit.getId()).isEmpty()) {
                 companyRepository.findByName("Zoho Corporation").ifPresent(z ->
                     companyHistoryRepository.save(new CompanyPlacementHistory(z, bit, "2024-2025", 92, 46, 22, "MTS, Product Developer", 8.6, 11.5))
@@ -593,6 +595,69 @@ public class DataInitializer implements CommandLineRunner {
                 new Department(college, "Mechanical Engineering", "MECH"),
                 new Department(college, "Artificial Intelligence & Data Science", "AIDS")
             ));
+        }
+    }
+
+    private void ensureAllRegionalColleges() {
+        String[][] collegesData = {
+            // Erode Region
+            {"Bannari Amman Institute of Technology", "BIT-SAT", "Sathyamangalam", "Tamil Nadu", "placement@bitsathy.ac.in", "+91 4295 226000"},
+            {"Kongu Engineering College", "KEC-PER", "Perundurai", "Tamil Nadu", "placement@kongu.edu", "+91 4294 226555"},
+            {"Velalar College of Engineering and Technology", "VCET-ERD", "Erode", "Tamil Nadu", "placement@velalarengg.ac.in", "+91 424 2244201"},
+            {"Nandha Engineering College", "NEC-ERD", "Erode", "Tamil Nadu", "placement@nandhaengg.org", "+91 4294 225585"},
+            {"Nandha College of Technology", "NCT-ERD", "Erode", "Tamil Nadu", "placement@nandhatech.org", "+91 4294 223434"},
+            {"Erode Sengunthar Engineering College", "ESEC-ERD", "Thudupathi", "Tamil Nadu", "placement@erodesengunthar.ac.in", "+91 4294 232701"},
+            {"Al-Ameen Engineering College", "AEC-ERD", "Erode", "Tamil Nadu", "placement@alameen.ac.in", "+91 424 2500354"},
+            {"M.P. Nachimuthu M. Jaganathan Engineering College", "MPNMJ-ERD", "Erode", "Tamil Nadu", "placement@mpnmjec.ac.in", "+91 424 2357009"},
+            {"Surya Engineering College", "SEC-ERD", "Erode", "Tamil Nadu", "placement@surya.ac.in", "+91 424 2555018"},
+
+            // Coimbatore Region
+            {"Government College of Technology", "GCT-CBE", "Coimbatore", "Tamil Nadu", "tpo@gct.ac.in", "+91 422 2432221"},
+            {"PSG College of Technology", "PSG-CBE", "Coimbatore", "Tamil Nadu", "placement@psgtech.edu", "+91 422 4344777"},
+            {"Kumaraguru College of Technology", "KCT-CBE", "Coimbatore", "Tamil Nadu", "placement@kct.ac.in", "+91 422 2669401"},
+            {"Coimbatore Institute of Technology", "CIT-CBE", "Coimbatore", "Tamil Nadu", "placement@cit.edu.in", "+91 422 2574071"},
+            {"PSG Institute of Technology and Applied Research", "PSG-ITECH", "Coimbatore", "Tamil Nadu", "placement@psgitech.ac.in", "+91 422 3933666"},
+            {"Sri Krishna College of Engineering and Technology", "SKCET-CBE", "Coimbatore", "Tamil Nadu", "placement@skcet.ac.in", "+91 422 2678001"},
+            {"Sri Krishna College of Technology", "SKCT-CBE", "Coimbatore", "Tamil Nadu", "placement@skct.edu.in", "+91 422 2604567"},
+            {"Sri Ramakrishna Engineering College", "SREC-CBE", "Coimbatore", "Tamil Nadu", "placement@srec.ac.in", "+91 422 2460088"},
+            {"Sri Ramakrishna Institute of Technology", "SRIT-CBE", "Coimbatore", "Tamil Nadu", "placement@srit.org", "+91 422 2605577"},
+            {"Dr. Mahalingam College of Engineering and Technology", "MCET-PLM", "Pollachi", "Tamil Nadu", "placement@drmcet.ac.in", "+91 4259 236030"},
+            {"Karpagam College of Engineering", "KCE-CBE", "Coimbatore", "Tamil Nadu", "placement@kce.ac.in", "+91 422 2619047"},
+            {"Hindusthan College of Engineering and Technology", "HICET-CBE", "Coimbatore", "Tamil Nadu", "placement@hindusthan.net", "+91 422 2930216"},
+            {"SNS College of Technology", "SNS-CBE", "Coimbatore", "Tamil Nadu", "placement@snsct.org", "+91 422 2666264"},
+            {"Rathinam Technical Campus", "RTC-CBE", "Coimbatore", "Tamil Nadu", "placement@rathinam.in", "+91 422 4040909"},
+            {"Coimbatore Institute of Engineering and Technology", "CIET-CBE", "Coimbatore", "Tamil Nadu", "placement@cietcbe.edu.in", "+91 422 2651188"},
+            {"KPR Institute of Engineering and Technology", "KPRIET-CBE", "Coimbatore", "Tamil Nadu", "placement@kpriet.ac.in", "+91 422 2635600"},
+            {"Sri Shakthi Institute of Engineering and Technology", "SIET-CBE", "Coimbatore", "Tamil Nadu", "placement@siet.ac.in", "+91 422 2383838"},
+            {"Amrita Vishwa Vidyapeetham", "AMRITA", "Coimbatore", "Tamil Nadu", "placement@amrita.edu", "+91 422 2685000"},
+
+            // Chennai Region
+            {"College of Engineering Guindy", "CEG-CHN", "Chennai", "Tamil Nadu", "placement@ceg.annauniv.edu", "+91 44 22200200"},
+            {"Madras Institute of Technology", "MIT-CHN", "Chennai", "Tamil Nadu", "placement@mitindia.edu", "+91 44 22516000"},
+            {"Anna University", "AU-CHN", "Chennai", "Tamil Nadu", "placement@annauniv.edu", "+91 44 22358000"},
+            {"IIT Madras", "IITM-CHN", "Chennai", "Tamil Nadu", "placement@iitm.ac.in", "+91 44 22578000"},
+            {"SSN College of Engineering", "SSN-CHN", "Chennai", "Tamil Nadu", "placement@ssn.edu.in", "+91 44 27469700"},
+            {"Sri Venkateswara College of Engineering", "SVCE-CHN", "Sriperumbudur", "Tamil Nadu", "placement@svce.ac.in", "+91 44 27152000"},
+            {"Rajalakshmi Engineering College", "REC-CHN", "Chennai", "Tamil Nadu", "placement@rajalakshmi.edu.in", "+91 44 27156750"},
+            {"Rajalakshmi Institute of Technology", "RIT-CHN", "Chennai", "Tamil Nadu", "placement@ritchennai.edu.in", "+91 44 67181600"},
+            {"Chennai Institute of Technology", "CIT-CHN", "Chennai", "Tamil Nadu", "placement@citchennai.net", "+91 44 71119111"},
+            {"St. Joseph's College of Engineering", "SJCE-CHN", "Chennai", "Tamil Nadu", "placement@stjosephs.ac.in", "+91 44 24501060"},
+            {"St. Joseph's Institute of Technology", "SJIT-CHN", "Chennai", "Tamil Nadu", "placement@stjosefstechnology.ac.in", "+91 44 24503132"},
+            {"Panimalar Engineering College", "PEC-CHN", "Chennai", "Tamil Nadu", "placement@panimalar.ac.in", "+91 44 26490404"},
+            {"RMK Engineering College", "RMK-CHN", "Thiruvallur", "Tamil Nadu", "placement@rmkec.ac.in", "+91 44 67906790"},
+            {"RMD Engineering College", "RMD-CHN", "Thiruvallur", "Tamil Nadu", "placement@rmd.ac.in", "+91 44 67919191"},
+            {"Sri Sairam Engineering College", "SAIRAM-CHN", "Chennai", "Tamil Nadu", "placement@sairam.edu.in", "+91 44 22512222"},
+            {"Easwari Engineering College", "EEC-CHN", "Chennai", "Tamil Nadu", "placement@eec.srmrmp.edu.in", "+91 44 43923041"},
+            {"Meenakshi Sundararajan Engineering College", "MSEC-CHN", "Chennai", "Tamil Nadu", "placement@msec.edu.in", "+91 44 24801636"},
+            {"Loyola-ICAM College of Engineering and Technology", "LICET-CHN", "Chennai", "Tamil Nadu", "placement@licet.ac.in", "+91 44 28178490"},
+            {"Saveetha Engineering College", "SAV-CHN", "Chennai", "Tamil Nadu", "placement@saveetha.ac.in", "+91 44 66311322"},
+            {"SRM Institute of Science and Technology", "SRM-KTR", "Kattankulathur", "Tamil Nadu", "placement@srmist.edu.in", "+91 44 27417000"},
+            {"SRM Valliammai Engineering College", "VEC-KTR", "Kattankulathur", "Tamil Nadu", "placement@valliammai.co.in", "+91 44 27454784"}
+        };
+
+        for (String[] row : collegesData) {
+            College c = getOrSaveCollege(row[0], row[1], row[2], row[3], row[4], row[5]);
+            ensureDepartments(c);
         }
     }
 }

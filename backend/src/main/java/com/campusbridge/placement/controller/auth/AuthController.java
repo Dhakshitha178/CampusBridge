@@ -74,7 +74,7 @@ public class AuthController {
 
     @GetMapping("/colleges")
     public ResponseEntity<ApiResponse<List<College>>> getColleges() {
-        return ResponseEntity.ok(ApiResponse.ok(collegeRepository.findAll()));
+        return ResponseEntity.ok(ApiResponse.ok(collegeRepository.findAllByOrderByNameAsc()));
     }
 
     @PostMapping("/register-tpo")

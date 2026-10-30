@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerStudent, getColleges } from "../../services/authService";
+import { mergeColleges } from "../../constants/colleges";
 
-const DEFAULT_COLLEGES = [
-  { id: 1, name: "Government College of Technology", code: "GCT-CBE" },
-  { id: 2, name: "PSG College of Technology", code: "PSG-CBE" },
-  { id: 40, name: "Bannari Amman Institute of Technology", code: "BIT-SAT" },
-];
+const INITIAL_COLLEGES = mergeColleges();
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const [colleges, setColleges] = useState(DEFAULT_COLLEGES);
+  const [colleges, setColleges] = useState(INITIAL_COLLEGES);
   const [form, setForm] = useState({
     fullName: "",
     rollNumber: "",
@@ -23,7 +20,7 @@ const RegisterPage = () => {
     cgpa: 8.0,
     backlogs: 0,
     skills: "Java, Spring Boot, React, SQL",
-    collegeId: 1,
+    collegeId: INITIAL_COLLEGES[0]?.id || 1,
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -34,26 +31,12 @@ const RegisterPage = () => {
       try {
         const res = await getColleges();
         if (res.success && res.data && res.data.length > 0) {
-          const list = [...res.data];
-          const hasBit = list.some(
-            (c) =>
-              (c.name && c.name.toLowerCase().includes("bannari amman")) ||
-              (c.code && c.code.toUpperCase().includes("BIT"))
-          );
-          if (!hasBit) {
-            list.push({
-              id: 40,
-              name: "Bannari Amman Institute of Technology",
-              code: "BIT-SAT",
-              city: "Sathyamangalam",
-              state: "Tamil Nadu",
-            });
-          }
+          const list = mergeColleges(res.data);
           setColleges(list);
           setForm((prev) => ({ ...prev, collegeId: prev.collegeId || list[0].id }));
         }
       } catch (err) {
-        console.warn("Could not fetch colleges dynamically, using defaults.");
+        console.warn("Could not fetch colleges dynamically, using regional defaults.");
       }
     };
     fetchColleges();
@@ -177,19 +160,11 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 required
               >
-                {colleges.length > 0 ? (
-                  colleges.map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.name} ({col.code || "COL"})
-                    </option>
-                  ))
-                ) : (
-                  DEFAULT_COLLEGES.map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.name} ({col.code})
-                    </option>
-                  ))
-                )}
+                {colleges.map((col) => (
+                  <option key={col.id} value={col.id}>
+                    {col.name} ({col.code || "COL"}){col.city ? ` — ${col.city}` : ""}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="col-md-6">

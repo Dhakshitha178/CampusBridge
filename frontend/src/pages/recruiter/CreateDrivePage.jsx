@@ -2,19 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createDrive } from "../../services/recruiterService";
 import { getColleges } from "../../services/authService";
-
-const DEFAULT_COLLEGES = [
-  { id: 1, name: "Government College of Technology", code: "GCT-CBE", city: "Coimbatore" },
-  { id: 2, name: "PSG College of Technology", code: "PSG-CBE", city: "Coimbatore" },
-  { id: 40, name: "Bannari Amman Institute of Technology", code: "BIT-SAT", city: "Sathyamangalam" },
-];
+import { mergeColleges } from "../../constants/colleges";
 
 const CreateDrivePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [colleges, setColleges] = useState(DEFAULT_COLLEGES);
+  const [colleges, setColleges] = useState(mergeColleges());
 
   const [form, setForm] = useState({
     title: "",
@@ -60,22 +55,7 @@ const CreateDrivePage = () => {
     getColleges()
       .then((res) => {
         if (res.success && res.data && res.data.length > 0) {
-          const list = [...res.data];
-          const hasBit = list.some(
-            (c) =>
-              (c.name && c.name.toLowerCase().includes("bannari amman")) ||
-              (c.code && c.code.toUpperCase().includes("BIT"))
-          );
-          if (!hasBit) {
-            list.push({
-              id: 40,
-              name: "Bannari Amman Institute of Technology",
-              code: "BIT-SAT",
-              city: "Sathyamangalam",
-              state: "Tamil Nadu",
-            });
-          }
-          setColleges(list);
+          setColleges(mergeColleges(res.data));
         }
       })
       .catch((err) => {
@@ -297,7 +277,7 @@ const CreateDrivePage = () => {
                   <option value="">All Affiliated Institutions (Central Pool)</option>
                   {colleges.map((col) => (
                     <option key={col.id} value={col.id}>
-                      {col.name} ({col.code || "COL"})
+                      {col.name} ({col.code || "COL"}){col.city ? ` — ${col.city}` : ""}
                     </option>
                   ))}
                 </select>

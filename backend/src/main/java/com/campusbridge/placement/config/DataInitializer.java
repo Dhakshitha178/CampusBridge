@@ -82,15 +82,31 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // Ensure Bannari Amman Institute of Technology is always seeded without duplicates
+        College bit = getOrSaveCollege("Bannari Amman Institute of Technology", "BIT-SAT", "Sathyamangalam", "Tamil Nadu", "placement@bitsathy.ac.in", "+91 4295 226000");
+        ensureDepartments(bit);
+        getOrSaveUser("tpo@bitsathy.ac.in", "Tpo@2025", Role.TPO, "Dr. S. BIT Placement Officer", "+91 9842200029", bit);
+
         // Idempotent guard: skip if already fully seeded with all required data
-        if (collegeRepository.count() >= 20 && userRepository.existsByEmail("student@cb.com")) {
+        if (collegeRepository.count() >= 21 && userRepository.existsByEmail("student@cb.com")) {
+            if (companyHistoryRepository.findByCollegeId(bit.getId()).isEmpty()) {
+                companyRepository.findByName("Zoho Corporation").ifPresent(z ->
+                    companyHistoryRepository.save(new CompanyPlacementHistory(z, bit, "2024-2025", 92, 46, 22, "MTS, Product Developer", 8.6, 11.5))
+                );
+                companyRepository.findByName("Tata Consultancy Services").ifPresent(t ->
+                    companyHistoryRepository.save(new CompanyPlacementHistory(t, bit, "2024-2025", 135, 72, 40, "Digital, Ninja", 6.8, 7.5))
+                );
+                companyRepository.findByName("Infosys Limited").ifPresent(inf ->
+                    companyHistoryRepository.save(new CompanyPlacementHistory(inf, bit, "2024-2025", 115, 50, 24, "Specialist Programmer, SE", 8.0, 9.5))
+                );
+            }
             System.out.println(">>> CampusBridge database already fully seeded. Skipping.");
             return;
         }
 
         System.out.println(">>> Initializing CampusBridge expanded demo data...");
 
-        // ===== 1. COLLEGES (20 total) =====
+        // ===== 1. COLLEGES (21 total) =====
         College gct     = getOrSaveCollege("Government College of Technology",         "GCT-CBE", "Coimbatore",   "Tamil Nadu",    "tpo@gct.ac.in",            "+91 422 2432221");
         College psg     = getOrSaveCollege("PSG College of Technology",                "PSG-CBE", "Coimbatore",   "Tamil Nadu",    "placement@psgtech.edu",    "+91 422 4344777");
         College mit     = getOrSaveCollege("Madras Institute of Technology",           "MIT-CHN", "Chennai",      "Tamil Nadu",    "placement@mitindia.edu",   "+91 44 22516000");
@@ -116,6 +132,7 @@ public class DataInitializer implements CommandLineRunner {
         ensureDepartments(gct);
         ensureDepartments(psg);
         ensureDepartments(vit);
+        ensureDepartments(bit);
 
         // ===== 3. COMPANIES (50 total) =====
         Company zoho        = getOrSaveCompany("Zoho Corporation",                    "https://www.zohocorp.com",       "SaaS & Enterprise Cloud",          "Chennai",     "Tamil Nadu");
@@ -243,7 +260,8 @@ public class DataInitializer implements CommandLineRunner {
             {"tpo@kctcbe.ac.in",         "Prof. E. Balasubramanian",  "+91 9842200025", kct},
             {"tpo2@nitt.edu",            "Dr. N. Venkatesh",          "+91 9842200026", nit},
             {"tpo2@manipal.edu",         "Prof. O. Shetty",           "+91 9842200027", manipal},
-            {"tpo@mitmangalore.edu",     "Dr. Q. Rao",                "+91 9842200028", mit}
+            {"tpo@mitmangalore.edu",     "Dr. Q. Rao",                "+91 9842200028", mit},
+            {"tpo@bitsathy.ac.in",       "Dr. S. BIT Placement Officer", "+91 9842200029", bit}
         };
         for (Object[] entry : tpoEntries) {
             getOrSaveUser((String)entry[0], "Tpo@2025", Role.TPO, (String)entry[1], (String)entry[2], (College)entry[3]);
@@ -343,7 +361,7 @@ public class DataInitializer implements CommandLineRunner {
             "Networking, CCNA, Linux Administration",
             "Cloud (AWS), Docker, Kubernetes, CI/CD"};
         College[] sCols   = {gct,psg,vit,srm,amrita,kct,anna,nit,rvce,pesu,
-            manipal,bits,iitm,coep,dtu,lpu,thapar,mit,ceg,vjti};
+            manipal,bits,iitm,coep,dtu,lpu,thapar,mit,ceg,vjti,bit};
 
         List<User> newUsers = new ArrayList<>();
         List<int[]> indices  = new ArrayList<>();
@@ -519,10 +537,13 @@ public class DataInitializer implements CommandLineRunner {
                 new CompanyPlacementHistory(zoho, gct, "2023-2024", 78, 32, 14, "MTS", 7.8, 8.0),
                 new CompanyPlacementHistory(zoho, psg, "2024-2025", 110, 52, 26, "MTS, Product Developer", 8.8, 12.0),
                 new CompanyPlacementHistory(zoho, mit, "2024-2025", 95, 44, 21, "MTS", 8.4, 9.5),
+                new CompanyPlacementHistory(zoho, bit, "2024-2025", 92, 46, 22, "MTS, Product Developer", 8.6, 11.5),
                 new CompanyPlacementHistory(tcs, gct, "2024-2025", 140, 75, 42, "Digital, Ninja", 6.8, 7.5),
                 new CompanyPlacementHistory(tcs, gct, "2023-2024", 130, 68, 38, "Digital, Ninja", 6.5, 7.0),
+                new CompanyPlacementHistory(tcs, bit, "2024-2025", 135, 72, 40, "Digital, Ninja", 6.8, 7.5),
                 new CompanyPlacementHistory(infosys, gct, "2024-2025", 120, 48, 22, "Specialist Programmer, SE", 8.1, 9.5),
-                new CompanyPlacementHistory(infosys, psg, "2024-2025", 135, 60, 31, "SP, DSE", 8.6, 9.5)
+                new CompanyPlacementHistory(infosys, psg, "2024-2025", 135, 60, 31, "SP, DSE", 8.6, 9.5),
+                new CompanyPlacementHistory(infosys, bit, "2024-2025", 115, 50, 24, "Specialist Programmer, SE", 8.0, 9.5)
             ));
         }
 
@@ -532,6 +553,7 @@ public class DataInitializer implements CommandLineRunner {
     // ===== HELPER METHODS =====
     private College getOrSaveCollege(String name, String code, String city, String state, String email, String phone) {
         return collegeRepository.findByCode(code)
+            .or(() -> collegeRepository.findByName(name))
             .orElseGet(() -> collegeRepository.save(new College(name, code, city, state, email, phone)));
     }
 

@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createDrive } from "../../services/recruiterService";
+import { getColleges } from "../../services/authService";
+
+const DEFAULT_COLLEGES = [
+  { id: 1, name: "Government College of Technology", code: "GCT-CBE", city: "Coimbatore" },
+  { id: 2, name: "PSG College of Technology", code: "PSG-CBE", city: "Coimbatore" },
+  { id: 40, name: "Bannari Amman Institute of Technology", code: "BIT-SAT", city: "Sathyamangalam" },
+];
 
 const CreateDrivePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [colleges, setColleges] = useState(DEFAULT_COLLEGES);
 
   const [form, setForm] = useState({
     title: "",
@@ -16,6 +24,7 @@ const CreateDrivePage = () => {
     vacancies: 15,
     location: "Chennai / Bangalore",
     workMode: "HYBRID",
+    collegeId: "",
     applicationDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     driveDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     criteria: {
@@ -47,6 +56,33 @@ const CreateDrivePage = () => {
     ],
   });
 
+  useEffect(() => {
+    getColleges()
+      .then((res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          const list = [...res.data];
+          const hasBit = list.some(
+            (c) =>
+              (c.name && c.name.toLowerCase().includes("bannari amman")) ||
+              (c.code && c.code.toUpperCase().includes("BIT"))
+          );
+          if (!hasBit) {
+            list.push({
+              id: 40,
+              name: "Bannari Amman Institute of Technology",
+              code: "BIT-SAT",
+              city: "Sathyamangalam",
+              state: "Tamil Nadu",
+            });
+          }
+          setColleges(list);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading colleges for drive targeting:", err);
+      });
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({
@@ -56,6 +92,8 @@ const CreateDrivePage = () => {
           ? parseFloat(value) || 0
           : name === "vacancies"
           ? parseInt(value) || 0
+          : name === "collegeId"
+          ? (value ? parseInt(value) : "")
           : value,
     });
   };
@@ -246,6 +284,26 @@ const CreateDrivePage = () => {
                   value={form.location}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label small fw-semibold">Target Institution / College</label>
+                <select
+                  name="collegeId"
+                  className="form-select form-select-sm"
+                  value={form.collegeId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">All Affiliated Institutions (Central Pool)</option>
+                  {colleges.map((col) => (
+                    <option key={col.id} value={col.id}>
+                      {col.name} ({col.code || "COL"})
+                    </option>
+                  ))}
+                </select>
+                <div className="form-text small">
+                  Target a specific institution or leave as Central Pool for cross-campus hiring.
+                </div>
               </div>
 
               <div className="col-12">

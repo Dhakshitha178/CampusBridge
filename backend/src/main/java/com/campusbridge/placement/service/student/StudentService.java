@@ -204,26 +204,23 @@ public class StudentService {
 
     public List<Map<String, Object>> getInterCollegeAggregatedHistory() {
         List<CompanyPlacementHistory> all = historyRepository.findAll();
-        Map<String, Map<String, Object>> aggregated = new HashMap<>();
+        List<Map<String, Object>> result = new ArrayList<>();
 
         for (CompanyPlacementHistory h : all) {
-            String companyName = h.getCompany().getName();
-            Map<String, Object> entry = aggregated.computeIfAbsent(companyName, k -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("companyName", k);
-                m.put("totalApplicants", 0);
-                m.put("totalSelected", 0);
-                m.put("highestPackage", 0.0);
-                m.put("rolesOffered", h.getRolesOffered());
-                return m;
-            });
-
-            entry.put("totalApplicants", (int) entry.get("totalApplicants") + (h.getApplicantCount() != null ? h.getApplicantCount() : 0));
-            entry.put("totalSelected", (int) entry.get("totalSelected") + (h.getSelectedCount() != null ? h.getSelectedCount() : 0));
-            double highest = Math.max((double) entry.get("highestPackage"), h.getHighestPackage() != null ? h.getHighestPackage() : 0.0);
-            entry.put("highestPackage", highest);
+            Map<String, Object> m = new HashMap<>();
+            m.put("collegeName", h.getCollege() != null ? h.getCollege().getName() : "Ecosystem Member");
+            m.put("collegeCode", h.getCollege() != null ? h.getCollege().getCode() : "COL");
+            m.put("companyName", h.getCompany() != null ? h.getCompany().getName() : "");
+            m.put("academicYear", h.getAcademicYear() != null ? h.getAcademicYear() : "2024-2025");
+            m.put("selectedCandidates", h.getSelectedCount() != null ? h.getSelectedCount() : 0);
+            m.put("averagePackage", h.getAvgPackage() != null ? h.getAvgPackage() : 0.0);
+            m.put("highestPackage", h.getHighestPackage() != null ? h.getHighestPackage() : 0.0);
+            m.put("rolesOffered", h.getRolesOffered() != null ? h.getRolesOffered() : "Graduate Engineer");
+            m.put("totalApplicants", h.getApplicantCount() != null ? h.getApplicantCount() : 0);
+            m.put("totalSelected", h.getSelectedCount() != null ? h.getSelectedCount() : 0);
+            result.add(m);
         }
 
-        return new ArrayList<>(aggregated.values());
+        return result;
     }
 }

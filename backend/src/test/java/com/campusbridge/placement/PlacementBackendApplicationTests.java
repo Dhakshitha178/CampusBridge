@@ -25,6 +25,9 @@ class PlacementBackendApplicationTests {
     @Autowired
     private SchedulingConflictService conflictService;
 
+    @Autowired
+    private com.campusbridge.placement.repository.InterviewRepository interviewRepository;
+
     @Test
     @DisplayName("Application Context Loads Successfully")
     void contextLoads() {
@@ -69,8 +72,9 @@ class PlacementBackendApplicationTests {
     @Test
     @DisplayName("Interview Conflict Detection - Overlapping intervals detected accurately")
     void testConflictDetection() {
-        // Pre-seeded Student 1 (Arun) has a Zoho interview at 10:00 - 11:00 on demo date
-        LocalDate demoDate = LocalDate.now().plusDays(2);
+        LocalDate demoDate = interviewRepository.findById(1L)
+                .map(com.campusbridge.placement.entity.Interview::getInterviewDate)
+                .orElse(LocalDate.now().plusDays(2));
 
         // Requested slot 10:30 - 11:30 overlaps with 10:00 - 11:00
         ConflictReportDto overlapReport = conflictService.checkConflicts(

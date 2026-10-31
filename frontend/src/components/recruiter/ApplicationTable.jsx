@@ -34,14 +34,20 @@ const ApplicationTable = ({
           {applications.map((app) => (
             <tr key={app.id}>
               <td>
-                <div className="fw-semibold text-dark">{app.studentName}</div>
-                <div className="text-muted small">{app.studentRollNumber}</div>
+                <div className="fw-semibold text-dark">
+                  {app.studentName || app.name || (app.student && app.student.fullName) || `Candidate #${app.id}`}
+                </div>
+                <div className="text-muted small">
+                  {app.studentRollNumber || app.rollNumber || (app.student && app.student.rollNumber) || "—"}
+                </div>
               </td>
-              <td>{app.department}</td>
+              <td>{app.department || (app.student && app.student.department) || "—"}</td>
               <td>
-                <span className="badge bg-light text-dark border">{app.cgpa}</span>
+                <span className="badge bg-light text-dark border">
+                  {app.cgpa ?? (app.student && app.student.cgpa) ?? "—"}
+                </span>
               </td>
-              <td>{app.backlogs ?? 0}</td>
+              <td>{app.backlogs ?? (app.student && app.student.backlogs) ?? 0}</td>
               <td>
                 <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
                   {app.currentStageName || "Stage 1"}

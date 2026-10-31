@@ -261,7 +261,9 @@ const InterviewManagementPage = () => {
                         required
                       >
                         {drives.map((d) => (
-                          <option key={d.id} value={d.id}>{d.title}</option>
+                          <option key={d.id} value={d.id}>
+                            {d.companyName ? `${d.companyName} — ` : ""}{d.title}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -276,7 +278,7 @@ const InterviewManagementPage = () => {
                       >
                         {applicants.map((a) => (
                           <option key={a.id} value={a.id}>
-                            {a.studentName} ({a.studentRollNumber})
+                            {a.studentName || a.name || (a.student && a.student.fullName) || `Candidate #${a.id}`} ({a.studentRollNumber || a.rollNumber || (a.student && a.student.rollNumber) || "N/A"})
                           </option>
                         ))}
                       </select>

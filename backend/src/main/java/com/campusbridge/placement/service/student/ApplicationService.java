@@ -142,13 +142,35 @@ public class ApplicationService {
 
     public List<ApplicationStatusResponse> getDriveApplications(Long driveId) {
         return applicationRepository.findByDriveId(driveId).stream()
-                .map(ApplicationStatusResponse::new)
+                .map(app -> {
+                    ApplicationStatusResponse resp = new ApplicationStatusResponse(app);
+                    if (app.getStudent() != null && app.getDrive() != null && app.getDrive().getEligibilityCriteria() != null) {
+                        EligibilityResultDto elig = eligibilityCheckService.checkEligibility(
+                                app.getStudent(), app.getDrive().getEligibilityCriteria());
+                        resp.setEligible(elig.isEligible());
+                        if (!elig.isEligible() && elig.getReasons() != null && !elig.getReasons().isEmpty()) {
+                            resp.setIneligibilityReason(String.join(", ", elig.getReasons()));
+                        }
+                    }
+                    return resp;
+                })
                 .collect(Collectors.toList());
     }
 
     public List<ApplicationStatusResponse> getCompanyApplications(Long companyId) {
         return applicationRepository.findByCompanyId(companyId).stream()
-                .map(ApplicationStatusResponse::new)
+                .map(app -> {
+                    ApplicationStatusResponse resp = new ApplicationStatusResponse(app);
+                    if (app.getStudent() != null && app.getDrive() != null && app.getDrive().getEligibilityCriteria() != null) {
+                        EligibilityResultDto elig = eligibilityCheckService.checkEligibility(
+                                app.getStudent(), app.getDrive().getEligibilityCriteria());
+                        resp.setEligible(elig.isEligible());
+                        if (!elig.isEligible() && elig.getReasons() != null && !elig.getReasons().isEmpty()) {
+                            resp.setIneligibilityReason(String.join(", ", elig.getReasons()));
+                        }
+                    }
+                    return resp;
+                })
                 .collect(Collectors.toList());
     }
 

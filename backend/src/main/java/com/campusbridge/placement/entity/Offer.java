@@ -1,6 +1,7 @@
 package com.campusbridge.placement.entity;
 
 import com.campusbridge.placement.entity.enums.OfferStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -93,4 +94,34 @@ public class Offer {
     public void setOfferedAt(LocalDateTime offeredAt) { this.offeredAt = offeredAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    @JsonProperty("studentName")
+    public String getStudentName() {
+        return student != null ? student.getFullName() : null;
+    }
+
+    @JsonProperty("studentRollNumber")
+    public String getStudentRollNumber() {
+        return student != null ? student.getRollNumber() : null;
+    }
+
+    @JsonProperty("companyName")
+    public String getCompanyName() {
+        return company != null ? company.getName() : null;
+    }
+
+    @JsonProperty("companyLogo")
+    public String getCompanyLogo() {
+        return company != null ? company.getLogoUrl() : null;
+    }
+
+    @JsonProperty("ctcPackage")
+    public Double getCtcPackage() {
+        return packageLpa;
+    }
+
+    @JsonProperty("designation")
+    public String getDesignation() {
+        return jobRole;
+    }
 }

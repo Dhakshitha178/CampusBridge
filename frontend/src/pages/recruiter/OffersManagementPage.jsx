@@ -163,10 +163,10 @@ const OffersManagementPage = () => {
                 <tbody className="small">
                   {offers.map((off) => (
                     <tr key={off.id}>
-                      <td className="fw-bold text-dark">{off.studentName}</td>
-                      <td><span className="badge bg-light text-dark border">{off.studentRollNumber}</span></td>
-                      <td>{off.designation || off.role}</td>
-                      <td><strong className="text-success">{off.ctcPackage} LPA</strong></td>
+                      <td className="fw-bold text-dark">{off.studentName || (off.student && off.student.fullName) || `Candidate #${off.id}`}</td>
+                      <td><span className="badge bg-light text-dark border">{off.studentRollNumber || (off.student && off.student.rollNumber) || "—"}</span></td>
+                      <td>{off.designation || off.jobRole || off.role}</td>
+                      <td><strong className="text-success">{off.ctcPackage || off.packageLpa} LPA</strong></td>
                       <td>{off.location}</td>
                       <td>{off.joiningDate}</td>
                       <td>
@@ -221,7 +221,9 @@ const OffersManagementPage = () => {
                       required
                     >
                       {drives.map((d) => (
-                        <option key={d.id} value={d.id}>{d.title}</option>
+                        <option key={d.id} value={d.id}>
+                          {d.companyName ? `${d.companyName} — ` : ""}{d.title}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -236,7 +238,7 @@ const OffersManagementPage = () => {
                     >
                       {applicants.map((a) => (
                         <option key={a.id} value={a.id}>
-                          {a.studentName} ({a.studentRollNumber})
+                          {a.studentName || a.name || (a.student && a.student.fullName) || `Candidate #${a.id}`} ({a.studentRollNumber || a.rollNumber || (a.student && a.student.rollNumber) || "N/A"})
                         </option>
                       ))}
                     </select>

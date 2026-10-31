@@ -2,12 +2,15 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerRecruiter, getCompanies } from "../../services/authService";
 import { AuthContext } from "../../context/AuthContext";
+import { mergeCompanies } from "../../constants/companies";
+
+const INITIAL_COMPANIES = mergeCompanies();
 
 const RecruiterRegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState(INITIAL_COMPANIES);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -31,15 +34,29 @@ const RecruiterRegisterPage = () => {
   useEffect(() => {
     getCompanies()
       .then((res) => {
-        if (res.success && res.data) setCompanies(res.data);
+        if (res.success && res.data && res.data.length > 0) {
+          setCompanies(mergeCompanies(res.data));
+        }
       })
       .catch((err) => {
-        console.error("Error loading companies:", err);
+        console.warn("Could not load companies from API, using preconfigured corporate list:", err);
       });
   }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleCompanySelect = (e) => {
+    const selectedId = e.target.value;
+    const selected = companies.find((c) => String(c.id) === String(selectedId));
+    setForm((prev) => ({
+      ...prev,
+      companyId: selectedId,
+      companyName: selected ? selected.name : prev.companyName,
+      companyIndustry: selected?.industry || prev.companyIndustry,
+      companyWebsite: selected?.website || prev.companyWebsite,
+    }));
   };
 
   const validateForm = () => {
@@ -65,16 +82,17 @@ const RecruiterRegisterPage = () => {
 
     setLoading(true);
     try {
+      const selectedCompany = companies.find((c) => String(c.id) === String(form.companyId));
       const payload = {
         fullName: form.fullName.trim(),
         email: form.email.trim().toLowerCase(),
         password: form.password,
         phoneNumber: form.phoneNumber.trim(),
         designation: form.designation.trim(),
-        companyId: useExistingCompany && form.companyId ? parseInt(form.companyId) : null,
-        companyName: !useExistingCompany ? form.companyName.trim() : null,
-        companyIndustry: !useExistingCompany ? form.companyIndustry.trim() : null,
-        companyWebsite: !useExistingCompany ? form.companyWebsite.trim() : null,
+        companyId: useExistingCompany && form.companyId && !isNaN(form.companyId) ? parseInt(form.companyId) : null,
+        companyName: useExistingCompany ? (selectedCompany ? selectedCompany.name : form.companyName) : form.companyName.trim(),
+        companyIndustry: useExistingCompany ? (selectedCompany?.industry || null) : (form.companyIndustry ? form.companyIndustry.trim() : null),
+        companyWebsite: useExistingCompany ? (selectedCompany?.website || null) : (form.companyWebsite ? form.companyWebsite.trim() : null),
       };
 
       const res = await registerRecruiter(payload);
@@ -257,7 +275,7 @@ const RecruiterRegisterPage = () => {
                     name="companyId"
                     className="form-select"
                     value={form.companyId}
-                    onChange={handleChange}
+                    onChange={handleCompanySelect}
                     required={useExistingCompany}
                   >
                     <option value="">-- Choose verified corporate partner --</option>

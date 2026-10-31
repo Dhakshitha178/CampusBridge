@@ -141,7 +141,7 @@ const EvaluationPage = () => {
         >
           {interviews.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.studentName} ({item.studentRollNumber}) &bull; {item.roundName || item.roundType} on {item.interviewDate} ({item.startTime})
+              {item.studentName || (item.student && item.student.fullName) || `Candidate #${item.id}`} ({item.studentRollNumber || (item.student && item.student.rollNumber) || "N/A"}) &bull; {item.roundName || item.stageName || item.roundType} on {item.interviewDate} ({item.startTime})
             </option>
           ))}
         </select>
@@ -157,9 +157,9 @@ const EvaluationPage = () => {
             <div className="content-card-body">
               {selectedInt && (
                 <div className="p-3 bg-light rounded mb-3 small">
-                  <div><strong>Candidate:</strong> {selectedInt.studentName} ({selectedInt.studentRollNumber})</div>
-                  <div><strong>Round:</strong> {selectedInt.roundName || selectedInt.roundType}</div>
-                  <div><strong>Drive:</strong> {selectedInt.driveTitle}</div>
+                  <div><strong>Candidate:</strong> {selectedInt.studentName || (selectedInt.student && selectedInt.student.fullName) || `Candidate #${selectedInt.id}`} ({selectedInt.studentRollNumber || (selectedInt.student && selectedInt.student.rollNumber) || "N/A"})</div>
+                  <div><strong>Round:</strong> {selectedInt.roundName || selectedInt.stageName || selectedInt.roundType}</div>
+                  <div><strong>Drive:</strong> {selectedInt.driveTitle || selectedInt.jobTitle}</div>
                 </div>
               )}
 

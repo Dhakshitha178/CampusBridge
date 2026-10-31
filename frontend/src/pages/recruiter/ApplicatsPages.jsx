@@ -142,7 +142,7 @@ const ApplicatsPages = () => {
             >
               {drives.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.title} ({d.jobRole}) &bull; {d.salaryPackage} LPA
+                  {d.companyName ? `${d.companyName} — ` : ""}{d.title} ({d.jobRole}) &bull; {d.salaryPackage} LPA
                 </option>
               ))}
             </select>
@@ -193,10 +193,10 @@ const ApplicatsPages = () => {
                   {filteredApplicants.map((app) => (
                     <tr key={app.id}>
                       <td className="fw-semibold text-dark">
-                        {app.studentName}
-                        {app.resumeUrl && (
+                        {app.studentName || app.name || (app.student && app.student.fullName) || `Candidate #${app.id}`}
+                        {(app.resumeUrl || (app.student && app.student.resumeUrl)) && (
                           <a
-                            href={app.resumeUrl}
+                            href={app.resumeUrl || app.student.resumeUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="ms-2 small text-primary"
@@ -206,14 +206,18 @@ const ApplicatsPages = () => {
                           </a>
                         )}
                       </td>
-                      <td><span className="badge bg-light text-dark border">{app.studentRollNumber}</span></td>
-                      <td><strong>{app.cgpa}</strong></td>
                       <td>
-                        <span className={app.backlogs > 0 ? "badge bg-danger" : "badge bg-success"}>
-                          {app.backlogs}
+                        <span className="badge bg-light text-dark border">
+                          {app.studentRollNumber || app.rollNumber || (app.student && app.student.rollNumber) || "—"}
                         </span>
                       </td>
-                      <td>{app.department}</td>
+                      <td><strong>{app.cgpa ?? (app.student && app.student.cgpa) ?? "—"}</strong></td>
+                      <td>
+                        <span className={(app.backlogs ?? (app.student && app.student.backlogs) ?? 0) > 0 ? "badge bg-danger" : "badge bg-success"}>
+                          {app.backlogs ?? (app.student && app.student.backlogs) ?? 0}
+                        </span>
+                      </td>
+                      <td>{app.department || (app.student && app.student.department) || "—"}</td>
                       <td>
                         {app.eligible !== false ? (
                           <span className="badge bg-success-subtle text-success border">
